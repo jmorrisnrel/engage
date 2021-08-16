@@ -31,7 +31,7 @@ class Help_Guide(models.Model):
         if record:
             return mark_safe(record.html)
         else:
-            return 'Not Available'
+            return ''
 
 
 class User_Profile(models.Model):

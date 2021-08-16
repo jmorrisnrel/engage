@@ -7,15 +7,22 @@ from .component_views import outputs as outputs_component_views
 
 urlpatterns = [
     # Configuration Component Views
+    path('component/locations/',
+         configuration_component_views.locations,
+         name='locations'),
+    path('component/technologies/',
+         configuration_component_views.technologies,
+         name='technologies'),
+    path('component/scenarios/',
+         configuration_component_views.scenarios,
+         name='scenarios'),
+
     path('component/all_tech_params/',
          configuration_component_views.all_tech_params,
          name='all_tech_params'),
     path('component/all_loc_tech_params/',
          configuration_component_views.all_loc_tech_params,
          name='all_loc_tech_params'),
-    path('component/all_loc_techs/',
-         configuration_component_views.all_loc_techs,
-         name='all_loc_techs'),
     path('component/location_coordinates/',
          configuration_component_views.location_coordinates,
          name='location_coordinates'),
@@ -28,6 +35,7 @@ urlpatterns = [
     path('component/timeseries_content/',
          configuration_component_views.timeseries_content,
          name='timeseries_content'),
+
     path('component/scenario/',
          configuration_component_views.scenario,
          name='scenario'),
@@ -50,6 +58,11 @@ urlpatterns = [
 
     # Configuration Views
     path('<model_uuid>/model/',
+         configuration_views.configuration_view,
+         name='configuration'),
+
+
+    path('<model_uuid>/model_OLD/',
          configuration_views.model_view,
          name='model'),
     path('<model_uuid>/parameters/<parameter_name>/',
@@ -64,18 +77,12 @@ urlpatterns = [
     path('<model_uuid>/loc_techs/',
          configuration_views.loc_techs_view,
          name='loc_techs'),
-    path('<model_uuid>/locations/',
-         configuration_views.locations_view,
-         name='locations'),
     path('<model_uuid>/technologies/',
          configuration_views.technologies_view,
          name='technologies'),
     path('<model_uuid>/add_technologies/',
          configuration_views.add_technologies_view,
          name='add_technologies'),
-    path('<model_uuid>/scenarios/',
-         configuration_views.scenarios_view,
-         name='scenarios'),
     path('<model_uuid>/add_scenarios/',
          configuration_views.add_scenarios_view,
          name='add_scenarios'),

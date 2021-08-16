@@ -3,9 +3,10 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_protect
 from django.utils.timezone import make_aware
+from django.db.models import Q
 
 from api.models.configuration import Scenario_Param, Scenario_Loc_Tech, \
-    Timeseries_Meta, ParamsManager, Model, User_File
+    Timeseries_Meta, ParamsManager, Model, User_File, Loc_Tech
 from api.utils import get_cols_from_csv
 
 import os
@@ -40,42 +41,51 @@ def location_coordinates(request):
     model = Model.by_uuid(model_uuid)
     model.handle_view_access(request.user)
 
-    locations = list(model.locations.values())
+    selected_ids = []
+    unselected_ids = []
+    transmissions = []
 
     # Get Locations included in Scenario
-    scenario_loc_techs = Scenario_Loc_Tech.objects.filter(
-        scenario_id=scenario_id)
-    selected_ids = []
-    transmissions = []
-    for slt in scenario_loc_techs:
-        selected_ids.append(slt.loc_tech.location_1_id)
-        selected_ids.append(slt.loc_tech.location_2_id)
-        if slt.loc_tech.location_2_id:
-            trans = {
-                'id': slt.loc_tech_id,
-                'name': slt.loc_tech.technology.pretty_name,
-                'lat1': slt.loc_tech.location_1.latitude,
-                'lon1': slt.loc_tech.location_1.longitude,
-                'lat2': slt.loc_tech.location_2.latitude,
-                'lon2': slt.loc_tech.location_2.longitude,
-            }
-            transmissions.append(trans)
+    if scenario_id:
+        scenario_loc_techs = Scenario_Loc_Tech.objects.filter(
+            scenario_id=scenario_id).values(
+                "loc_tech_id",
+                "loc_tech__location_1_id",
+                "loc_tech__location_2_id",
+                "loc_tech__technology__pretty_name",
+                "loc_tech__location_1__latitude",
+                "loc_tech__location_1__longitude",
+                "loc_tech__location_2__latitude",
+                "loc_tech__location_2__longitude")
+        for slt in scenario_loc_techs:
+            selected_ids.append(slt["loc_tech__location_1_id"])
+            selected_ids.append(slt["loc_tech__location_2_id"])
+            if slt["loc_tech__location_2_id"]:
+                trans = {
+                    'id': slt["loc_tech_id"],
+                    'name': slt["loc_tech__technology__pretty_name"],
+                    'lat1': slt["loc_tech__location_1__latitude"],
+                    'lon1': slt["loc_tech__location_1__longitude"],
+                    'lat2': slt["loc_tech__location_2__latitude"],
+                    'lon2': slt["loc_tech__location_2__longitude"],
+                }
+                transmissions.append(trans)
 
     # Get unselected Location Technologies
-    unselected_ids = []
-    loc_techs = model.loc_techs.filter(technology_id=technology_id)
-    for lt in loc_techs:
-        unselected_ids.append(lt.location_1_id)
+    if technology_id:
+        loc_techs = model.loc_techs.filter(technology_id=technology_id)
+        unselected_ids = loc_techs.values_list('location_1_id', flat=True)
 
     # Get selected Location Technology
-    loc_tech = model.loc_techs.filter(id=loc_tech_id).first()
-    if loc_tech:
-        selected_ids.append(loc_tech.location_1_id)
-        selected_ids.append(loc_tech.location_2_id)
+    if loc_tech_id:
+        loc_tech = model.loc_techs.filter(id=loc_tech_id).first()
+        if loc_tech:
+            selected_ids.append(loc_tech.location_1_id)
+            selected_ids.append(loc_tech.location_2_id)
 
-    selected_ids = list(set(selected_ids))
-
-    # Set Location View Type
+    # Get Locations
+    locations = list(model.locations.values("id", "pretty_name",
+                                            "latitude", "longitude"))
     for i in range(len(locations)):
         if locations[i]['id'] in selected_ids:
             locations[i]['type'] = 'selected'
@@ -90,6 +100,86 @@ def location_coordinates(request):
         'transmissions': transmissions,
     }
     return JsonResponse(response, safe=False)
+
+
+@csrf_protect
+def locations(request):
+    """
+    Retrieve the location list dashboard
+
+    Parameters:
+    model_uuid (uuid): required
+
+    Returns: HttpResponse
+
+    Example:
+    GET: /component/locations/
+    """
+
+    model_uuid = request.GET['model_uuid']
+
+    model = Model.by_uuid(model_uuid)
+    can_edit = model.handle_view_access(request.user)
+
+    locations = model.locations.values("id", "pretty_name", "available_area",
+                                       "latitude", "longitude", "description")
+    location_ids = [loc['id'] for loc in locations]
+    lts = Loc_Tech.objects.filter(
+        Q(location_1_id__in=location_ids) | Q(location_2_id__in=location_ids))
+    lts = lts.values("id", "technology_id", "location_1_id", "location_2_id",
+                     "technology__pretty_name", "technology__pretty_tag")
+    loc_techs = {}
+    for lt in lts:
+        l1, l2 = lt["location_1_id"], lt["location_2_id"]
+        if l1 not in loc_techs.keys():
+            loc_techs[l1] = [lt]
+        else:
+            loc_techs[l1].append(lt)
+        if l2 is not None and l2 not in loc_techs.keys():
+            loc_techs[l2] = [lt]
+        elif l2 is not None:
+            loc_techs[l2].append(lt)
+
+    context = {
+        "model": model,
+        "locations": locations,
+        "loc_techs": loc_techs,
+        "can_edit": can_edit,
+    }
+    locations_dashboard = list(render(
+        request, "locations_dashboard.html", context))[0]
+
+    payload = {
+        'model_id': model.id,
+        'locations_dashboard': locations_dashboard.decode('utf-8')}
+
+    return HttpResponse(json.dumps(payload, indent=4),
+                        content_type="application/json")
+
+
+@csrf_protect
+def technologies(request):
+    """
+    Retrieve a list of technologies
+
+    Parameters:
+    model_uuid (uuid): required
+
+    Returns: HttpResponse
+
+    Example:
+    GET: /component/technologies/
+    """
+
+    model_uuid = request.GET['model_uuid']
+    model = Model.by_uuid(model_uuid)
+    technologies = list(model.technologies.values('id', 'name',
+                                                  'pretty_name', 'pretty_tag',
+                                                  'abstract_tech__icon'))
+    payload = {'technologies': technologies}
+
+    return HttpResponse(json.dumps(payload, indent=4),
+                        content_type="application/json")
 
 
 @csrf_protect
@@ -109,19 +199,22 @@ def all_tech_params(request):
 
     model_uuid = request.GET['model_uuid']
     technology_id = request.GET['technology_id']
-    request.session['technology_id'] = technology_id
 
     model = Model.by_uuid(model_uuid)
     can_edit = model.handle_view_access(request.user)
 
     technology = model.technologies.get(id=technology_id)
+    loc_techs = model.loc_techs.filter(technology_id=technology_id)
     essentials, parameters = ParamsManager.all_tech_params(technology)
     timeseries = Timeseries_Meta.objects.filter(model=model, failure=False,
                                                 is_uploading=False)
 
     # Technology Definition
-    context = {"technology": technology,
+    context = {"model": model,
+               "technology": technology,
                "essentials": essentials,
+               "locations": model.locations,
+               "loc_techs": loc_techs,
                "carriers": model.carriers,
                "required_carrier_ids": [4, 5, 6],
                "cplus_carrier_ids": [66, 67, 68, 69],
@@ -150,53 +243,6 @@ def all_tech_params(request):
         'favorites': model.favorites}
 
     return HttpResponse(json.dumps(payload), content_type="application/json")
-
-
-@csrf_protect
-def all_loc_techs(request):
-    """
-    Retrieve the nodes for a technology
-
-    Parameters:
-    model_uuid (uuid): required
-    technology_id (int): required
-
-    Returns: HttpResponse
-
-    Example:
-    GET: /component/all_loc_techs/
-    """
-
-    model_uuid = request.GET['model_uuid']
-    technology_id = int(request.GET['technology_id'])
-    request.session['technology_id'] = technology_id
-
-    session_loc_tech_id = request.session.get('loc_tech_id', None)
-
-    model = Model.by_uuid(model_uuid)
-    can_edit = model.handle_view_access(request.user)
-
-    technology = model.technologies.filter(id=technology_id).first()
-    loc_techs = model.loc_techs.filter(technology_id=technology_id)
-
-    context = {
-        "model": model,
-        "locations": model.locations,
-        "technology": technology,
-        "loc_techs": loc_techs,
-        "session_loc_tech_id": session_loc_tech_id,
-        "can_edit": can_edit}
-    html_essentials = list(render(request,
-                                  'loc_tech_essentials.html',
-                                  context))[0]
-
-    payload = {
-        'technology_id': technology_id,
-        'html_essentials': html_essentials.decode('utf-8'),
-        'loc_techs': list(loc_techs.values())
-    }
-
-    return JsonResponse(payload)
 
 
 @csrf_protect
@@ -327,6 +373,29 @@ def timeseries_view(request):
 
 
 @csrf_protect
+def scenarios(request):
+    """
+    Retrieve a list of scenarios
+
+    Parameters:
+    model_uuid (uuid): required
+
+    Returns: HttpResponse
+
+    Example:
+    GET: /component/scenarios/
+    """
+
+    model_uuid = request.GET['model_uuid']
+    model = Model.by_uuid(model_uuid)
+    scenarios = list(model.scenarios.values('id', 'name'))
+    payload = {'scenarios': scenarios}
+
+    return HttpResponse(json.dumps(payload, indent=4),
+                        content_type="application/json")
+
+
+@csrf_protect
 def scenario(request):
     """
     Retrieve the parameters and nodes for a scenario
@@ -352,15 +421,23 @@ def scenario(request):
     colors = model.color_lookup
     parameters = Scenario_Param.objects.filter(
         model_id=model.id, scenario_id=scenario_id,
-        run_parameter__user_visibility=True)
+        run_parameter__user_visibility=True).values(
+            "id", "year", "value",
+            "run_parameter__id",
+            "run_parameter__root",
+            "run_parameter__name",
+            "run_parameter__pretty_name",
+            "run_parameter__description",
+            "run_parameter__can_evolve",
+            "run_parameter__choices")
 
     # All Loc Techs
     loc_techs = []
-    lts = model.loc_techs
-    lts = lts.values('id', 'technology_id', 'technology__pretty_name',
-                     'technology__pretty_tag',
-                     'technology__abstract_tech__icon',
-                     'location_1__pretty_name', 'location_2__pretty_name')
+    lts = model.loc_techs.values(
+        'id', 'technology_id', 'technology__pretty_name',
+        'technology__pretty_tag',
+        'technology__abstract_tech__icon',
+        'location_1__pretty_name', 'location_2__pretty_name')
     for lt in lts:
         tech_id = lt["technology_id"]
         color = colors[tech_id] if tech_id in colors.keys() else "#000"

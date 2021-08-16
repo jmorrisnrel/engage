@@ -717,12 +717,6 @@ class Technology(models.Model):
 
     def update(self, form_data):
         """ Update the Technology parameters stored in Tech_Param """
-        if 'is_linear' in form_data.keys():
-            self.is_linear = bool(int(form_data['is_linear']))
-            self.save()
-        if 'is_expansion' in form_data.keys():
-            self.is_expansion = bool(int(form_data['is_expansion']))
-            self.save()
         METHODS = ['essentials', 'add', 'edit', 'delete']
         for method in METHODS:
             if method in form_data.keys():
@@ -1306,12 +1300,8 @@ class ParamsManager():
         # Get Params based on Level
         if level == '0_abstract':
             technology = Technology.objects.get(id=id)
-            is_linear = technology.is_linear
-            is_expansion = technology.is_expansion
             params = Abstract_Tech_Param.objects.filter(
-                Q(abstract_tech=technology.abstract_tech),
-                Q(parameter__is_linear=is_linear) | Q(parameter__is_linear=None),
-                Q(parameter__is_expansion=is_expansion) | Q(parameter__is_expansion=None)
+                Q(abstract_tech=technology.abstract_tech)
             ).order_by('parameter__category', 'parameter__pretty_name')
             values += ["default_value"]
 
@@ -1394,7 +1384,6 @@ class ParamsManager():
                     ratios_val = ratios[row.parameter_name]
                 except Exception:
                     pass
-            print (row.parameter_pretty_name, val)
             essentials[row.parameter_id] = {
                 'name': row.parameter_pretty_name,
                 'value': val,

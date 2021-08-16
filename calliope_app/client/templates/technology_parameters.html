@@ -5,13 +5,49 @@
 {% load return_item %}
 {% load add_commas %}
 
-<table id="param_table" class="table table-hover table-sm" style="white-space:nowrap">
+<table id="param_table" class="table table-hover table-sm" style="white-space: nowrap;">
 	<tbody>
+		<tr class="tbl-header sticky-top" style="padding-right: 30px;">
+			<th colspan=3 class="text-sm" style="font-weight: normal; font-size: 0.75em;">
+				&nbsp;&nbsp;<i class="fas fa-bolt"></i>&nbsp;&nbsp;Supply of Electricity
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<i class="fas fa-cogs"></i>&nbsp;&nbsp;Settings
+			</th>
+			<th colspan=4 class="text-sm">
+				<!-- Add Deployment -->
+				{% if technology.abstract_tech.pretty_name == 'Transmission' %}
+				  <select {% if not can_edit %}disabled{% endif %} style="width: 50%; float: left; border: solid 2px #3f8bbc;" class="form-control" id="loc_tech-add-1">
+				  	<option value="" disabled selected>{% trans "Location" %} 1...</option>
+				  	{% for location in locations %}
+				    <option value="{{ location.id }}">{{ location.pretty_name }}</option>
+				    {% endfor %}
+				  </select>
+				  <select {% if not can_edit %}disabled{% endif %} style="width: 50%; float: left; border: solid 2px #3f8bbc;" class="form-control" id="loc_tech-add-2">
+				  	<option value="" disabled selected>{% trans "Location" %} 2...</option>
+				  	{% for location in locations %}
+				    <option value="{{ location.id }}">{{ location.pretty_name }}</option>
+				    {% endfor %}
+				  </select>
+				{% else %}
+				  <select {% if not can_edit %}disabled{% endif %} style="width: 100%; float: left; border: solid 2px #3f8bbc;" class="form-control" id="loc_tech-add-1">
+				  	<option value="" disabled selected>{% trans "Location" %}...</option>
+				  	{% for location in locations %}
+				    <option value="{{ location.id }}">{{ location.pretty_name }}</option>
+				    {% endfor %}
+				  </select>
+				{% endif %}
+			</th>
+			<th colspan=2 class="text-sm">
+			  <button {% if not can_edit %}disabled{% endif %} style="float: right;" class="btn btn-success loc_tech-add" type="button">
+			      {% trans "Add Deployment" %}
+			  </button>
+			</th>
+		</tr>
 		{% for param in parameters %}
 			{% if param.level != "1_tech" %}{% if param.level != "2_loc_tech" %}
 				{% ifchanged param.parameter_category %}
 				<!-- Category Header Row  -->
-					<tr class="tbl-header">
+					<tr class="tbl-header header-collapsable">
 						<th class="centered">
 							{% if param.parameter_category == "Costs: Monetary" %}
 							<i class="fas fa-dollar-sign"></i>
@@ -47,7 +83,7 @@
 						<span class="text-sm"></span><b>{{ param.parameter_pretty_name }}</b>
 					</td>
 					<!-- Parameter Timeseries Indicator -->
-					<td style="width:200px;" class="centered">
+					<td class="centered">
 						{% if param.timeseries_enabled %}
 						<button type="button" {% if not can_edit %}{% if param.timeseries == False %}disabled{% endif %}{% endif %} class="btn {% if param.timeseries == True %}btn-info param_row_toggle{% else %}btn-outline-info convert-to-timeseries{% endif %}" style="width:100%" data-toggle="tooltip" data-placement="right" title="{% if param.timeseries == True %}Show timeseries{% else %}Convert to timeseries{% endif %}">
 							<i class="fas fa-chart-line parameter-year"></i>
@@ -116,7 +152,7 @@
 					</td>
 					{% if param.timeseries == False %}
 					<td style="width:80px;" style="background-color: white" data-toggle="tooltip" data-placement="left" title="{% trans 'Evolve this parameter by year' %}">
-						<button {% if not can_edit %}disabled{% endif %} tabindex="-1" type="button" class="btn btn-default btn-sm transparent parameter-value-add"><i class="fas fa-plus"></i> {% trans "Row" %}</button>
+						<button {% if not can_edit %}disabled{% endif %} tabindex="-1" type="button" class="btn btn-default btn-sm transparent parameter-value-add"><i class="fas fa-plus"></i></button>
 					</td>
 					{% else %}
 					<td style="background-color: white"></td>

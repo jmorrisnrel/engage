@@ -5,14 +5,14 @@
 <table id="config_table" class="table table-hover table-sm">
 	<tbody>
 		<!-- Configuration Header Row  -->
-		<tr class="tbl-header" style="border-left: solid 20px grey">
+		<tr class="tbl-header" style="border-left: solid 30px grey">
 			<th class="sticky" colspan=2></th>
 			<th class="sticky text-sm">{% trans "Technologies" %}</th>
 			<th class="sticky text-sm">{% trans "Version Tag" %}</th>
 			<th class="sticky text-sm">{% trans "Locations" %}</th>
 			<th class="sticky text-sm centered"></th>
 		</tr>
-		<tr id="filter-row" class="tbl-header" style="border-left: solid 20px grey">
+		<tr id="filter-row" class="tbl-header" style="border-left: solid 30px grey">
 			<th class="text-sm"></th>
 			<th class="text-sm"></th>
 			<th class="text-sm">
@@ -47,16 +47,15 @@
 			</th>
 		</tr>
 		{% for loc_tech in loc_techs %}
+			{% with colors|return_item:loc_tech.technology_id as color %}
 			<!-- Scenario Loc Tech Row -->
 			<tr class="node {% if loc_tech.id in active_lt_ids %}table-info{% endif %}" data-loc_tech_id={{ loc_tech.id }} data-tech="{{ loc_tech.technology }}" data-tag="{{ loc_tech.tag }}" data-locations="['{{ loc_tech.location_1 }}'{% if loc_tech.location_2 %},'{{ loc_tech.location_2 }}'{% endif %}]">
 				<!-- Type -->
-				{% with colors|return_item:loc_tech.technology_id as color %}
-				<td class="text-sm centered" style="border-left: solid 20px {% if color %}{{ color }}{% else %}white{% endif %}">
+				<td class="text-sm centered" style="border-left: solid 30px {% if color %}{{ color }}{% else %}white{% endif %}">
 					<h6>
 						{{ loc_tech.icon|safe }}
 					</h6>
 				</td>
-				{% endwith %}
 				<!-- Carrier -->
 				<td class="text-sm">
 					{% if carrier_ins|return_item:loc_tech.technology_id %}
@@ -105,6 +104,7 @@
 					</label>
 				</td>
 			</tr>
+			{% endwith %}
 		{% endfor %}
 	</tbody>
 </table>

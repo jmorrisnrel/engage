@@ -733,7 +733,7 @@ msgstr ""
 
 #: client/templates/technology_essentials.html:32
 msgid ""
-"Version tags are used to differentiate multiple versions of the same "
+"Used to differentiate multiple versions of the same "
 "technology"
 msgstr ""
 

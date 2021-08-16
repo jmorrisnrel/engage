@@ -31,18 +31,18 @@ th.sticky {
   width: 800px;
 }
 #splitter {
-  height: 15px;
+  height: 22px;
   cursor: row-resize;
-  background-color: #137ac2;
+  background-color: #3f8bbc;
+  border-top: solid 2px black;
 }
 #splitter_btn {
-  line-height: 5px;
+  line-height: 20px;
   cursor: pointer;
   background-color: #005592;
   color: white;
-  font-size: 0.85em;
+  font-size: 0.9em;
   font-weight: bold;
-  padding-top: 1px;
   padding-left: 10px;
   padding-right: 10px;
 }
@@ -141,11 +141,11 @@ input.nav-dropdown {
     width: 18px;
     height: 18px;
     background-color: #00f;
-    border: 4px solid #000;
+    border: 3px solid #000;
 }
 .marker.dark {
     background-color: #33f;
-    border: 4px solid #fff;
+    border: 3px solid #fff;
 }
 
 .marker.selected {
@@ -160,23 +160,27 @@ input.nav-dropdown {
 }
 
 .marker.unselected {
+    width: 28px;
+    height: 28px;
     background-color: #00f;
-    border: 2px solid #000;
+    border: 3px solid #000;
 }
 .marker.unselected.dark {
+    width: 28px;
+    height: 28px;
     background-color: #33f;
-    border: 2px solid #fff;
+    border: 3px solid #fff;
 }
 
 .marker.reference {
-    width: 15px;
-    height: 15px;
-    border: 5px solid #000;
+    width: 13px;
+    height: 13px;
+    border: 2px solid #000;
 }
 .marker.reference.dark {
-    width: 15px;
-    height: 15px;
-    border: 5px solid #fff;
+    width: 13px;
+    height: 13px;
+    border: 2px solid #fff;
 }
 
 input:focus::placeholder{
@@ -189,11 +193,11 @@ input:focus::placeholder{
 
 /* select2 dropdown arrow styling */
 .select2-selection__arrow b {
-  transform: scale(3);
-  top: 20px !important;
+  transform: scale(2);
+  top: 12px !important;
   left: -30px !important;
-  border-top-color: #333 !important;
-  border-bottom-color: #333 !important;
+  border-top-color: #137ac2 !important;
+  border-bottom-color: #137ac2 !important;
 }
 b {
   margin-top: 6px !important;
@@ -231,9 +235,9 @@ body {
   top:0;
   width:100%;
 	font-size: 12px;
-	background-color: #f1f9ff;
+	background-color: #ffffff;
 	white-space: nowrap;
-  box-shadow: 0px 0px 6px 3px;
+  box-shadow: 0px 0px 4px 2px;
 }
 #header .btn.active {
 	font-weight: bold;
@@ -256,48 +260,42 @@ body {
 #subheader {
   z-index: 1002;
   position: sticky;
-  top:60px;
-  width:100%;
+  top: 60px;
+  width: 100%;
   white-space: nowrap;
 }
 #subheader2 {
   z-index: 1001;
   position: sticky;
-  top:85px;
+  top: 75px;
   white-space: nowrap;
+  border-top: solid;
 }
-.config-navigation {
-	position: relative;
-  margin-bottom: -15px
+.sticky-top {
+  top: -1px;
 }
-.fa-stack {
-  z-index: 450;
-}
-.fa-circle {
-  -webkit-text-stroke: 2px black;
-}
-.config-navigation:before {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  height: 3px;
-  background: black;
-  content: "";
-  width: 100%;
-  display: block;
-}
-
 .tab {
   background-color: white;
-  border: solid 1px grey;
+  border: solid 1px black;
   margin-bottom: -18px;
   margin-top: -24px;
-  padding-top: 10px;
-  height: 50px;
+  padding-top: 8px;
+  height: 40px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.tab:hover {
+  background-color: #3f8bbcdd;
+  color: white;
 }
 .tab-active {
-  background-color: #c4d7ea;
-  box-shadow: 0px 0px 7px 1px;
+  /*background-color: #c4d7ea;*/
+  background-color: #3f8bbc;
+  color: white;
+  padding-top: 6px;
+  border-top: solid 3px black;
+  border-left: solid 2px black;
+  border-right: solid 2px black;
 }
 
 select {
@@ -307,11 +305,11 @@ select {
 }
 
 .nav-dropdown, .select2, .select2-selection {
-	background-color: #ccd0d6 !important;
+	background-color: #c4d7ea !important;
   font-size: 1.2em;
-  height: 55px;
+  height: 40px;
   padding: 3px;
-  padding-top: 10px;
+  padding-top: 4px;
   width: 100%;
   cursor: pointer;
   font-weight: bold;
@@ -332,6 +330,8 @@ select {
 .master-btn {
   width:100%;
   height:100%;
+  border-radius: 0;
+  padding-top: 8px;
 }
 .blink_me {
   animation: blinker 1s linear infinite;
@@ -376,7 +376,9 @@ textarea {
 .tbl-header {
 	font-size: 24px;
 	background-color: #c1c1c1;
-	cursor: pointer;
+}
+.header-collapsable {
+  cursor: pointer;
 }
 .activity-header {
   background-color: #d8d8d8;
@@ -547,6 +549,10 @@ input:checked + .slider:before {
 
 .loc_tech_row {
   cursor: pointer;
+  border-right: solid 10px white;
+}
+.loc_tech_row.table-primary {
+  border-right: solid 10px #3f8bbc;
 }
 
 #container {

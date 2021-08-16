@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block head %}
+<script type="text/javascript" src="{% static 'js/main.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/locations.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/technologies.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/scenarios.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/units.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/data_imports.js' %}"></script>
+<style>
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div id="subheader">
+	<div class="row">
+		<div class="col-2 centered tab" data-type="activity">
+			<i class="fas fa-comments"></i>&nbsp;&nbsp;&nbsp;{% trans "Activity" %}
+		</div>
+		<div class="col-2 centered tab" data-type="timeseries">
+			<i class="fas fa-chart-line"></i>&nbsp;&nbsp;&nbsp;{% trans "Timeseries" %}
+		</div>
+		<div class="col-2 centered tab" data-type="locations">
+			<i class="fas fa-map-marker-alt"></i>&nbsp;&nbsp;&nbsp;{% trans "Locations" %}
+		</div>
+		<div class="col-2 centered tab" data-type="technologies">
+			<i class="fas fa-cog"></i>&nbsp;&nbsp;&nbsp;{% trans "Technologies" %}
+		</div>
+		<div class="col-2 centered tab" data-type="scenarios">
+			<i class="fas fa-code-branch"></i>&nbsp;&nbsp;&nbsp;{% trans "Scenarios" %}
+		</div>
+		<div class="col-2 centered tab" data-type="runs">
+			<i class="fas fa-play"></i>&nbsp;&nbsp;&nbsp;{% trans "Runs" %}
+		</div>
+	</div>
+</div>
+<div id="subheader2" class="row content_navigation">
+
+	<div class="col-1" style="background-color: #dedede; z-index: -1; padding: 0; z-index: 451; border-right: solid 2px black;">
+		<button id="master-cancel" {% if not can_edit %}disabled{% endif %} type="button" class="btn btn-danger master-btn hide"><b>{% trans "Cancel" %}</b></button>
+		<button id="master-settings" {% if not can_edit %}disabled{% endif %} type="button" class="btn btn-info master-btn hide">{% trans "Settings" %}</button>
+	</div>
+
+	<div class="col-10">
+		<div class="row">
+			<select class="nav-dropdown"></select>
+		</div>
+	</div>
+
+	<div class="col-1" style="background-color: #dedede; z-index: -1; padding: 0; z-index: 451; border-left: solid 2px black;">
+		<button id="master-save" {% if not can_edit %}disabled{% endif %} type="button" class="btn btn-warning master-btn hide"><b>{% trans "Save" %}</b></button>
+		<button id="master-new" {% if not can_edit %}disabled{% endif %} type="button" class="btn btn-success master-btn hide"><i class="fas fa-plus"></i>&nbsp;&nbsp;{% trans "New" %}</button>
+	</div>
+
+</div>
+<div style="height: calc(100% - 135px); margin-top: 15px;">
+	{% include "spinner.html" %}
+    <!-- Map -->
+    {% include "map_container.html" %}
+    <!-- Splitter -->
+    {% include "splitter.html" %}
+    <!-- Dashboard -->
+    <div id="dashboard" class="splitter_lower row" style="overflow-y: scroll; overflow-x: hidden; height: 50%;">
+	    <!-- Locations -->
+	    <div style="width: 100%" id="locations_dashboard" class="hide"></div>
+	    <!-- Technologies -->
+	    <div style="width: 100%; padding-left: 15px; padding-right: 15px;" id="technology_dashboard" class="hide">
+	    	<div class="row" id="technology_essentials" style="background-color: #e4e4e4;"></div>
+	    	<div class="row" id="technology_configuration"></div>
+	    </div>
+	    <!-- Scenarios -->
+        <form style="width: 100%;" id="form_scenario_settings" class="hide" method="post" action="" accept-charset="utf-8">
+            <div style="width: 100%;" id="scenario_settings">
+                <div style="color:red" class="col-12 centered"><br>{% trans "Oops, an error occurred" %}.<br><br></div>
+            </div>
+        </form>
+        <div style="width: 100%" id="scenario_configuration" class="hide"></div>
+    </div>
+</div>
+{% endblock %}

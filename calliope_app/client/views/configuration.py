@@ -13,6 +13,36 @@ from api.models.configuration import Model, User_File, \
 from pytz import common_timezones
 
 
+def configuration_view(request, model_uuid):
+    """
+    View the "Scenarios" page
+
+    Parameters:
+    model_uuid (uuid): required
+
+    Returns: HttpResponse
+
+    Example:
+    http://0.0.0.0:8000/<model_uuid>/
+    """
+
+    model = Model.by_uuid(model_uuid)
+    try:
+        can_edit = model.handle_view_access(request.user)
+    except Exception:
+        return HttpResponseRedirect(reverse('home'))
+
+    context = {
+        "timezones": common_timezones,
+        "model": model,
+        "mapbox_token": settings.MAPBOX_TOKEN,
+        "can_edit": can_edit,
+        "help_content": Help_Guide.get_safe_html('help'),
+    }
+
+    return render(request, "model.html", context)
+
+
 # ------ Model
 
 
@@ -55,60 +85,6 @@ def model_view(request, model_uuid):
     }
 
     return render(request, "activity.html", context)
-
-
-# ------ Locations
-
-
-def locations_view(request, model_uuid):
-    """
-    View the "Locations" page
-
-    Parameters:
-    model_uuid (uuid): required
-
-    Returns: HttpResponse
-
-    Example:
-    http://0.0.0.0:8000/<model_uuid>/locations
-    """
-
-    model = Model.by_uuid(model_uuid)
-    try:
-        can_edit = model.handle_view_access(request.user)
-    except Exception:
-        return HttpResponseRedirect(reverse('home'))
-
-    locations = model.locations.values()
-    location_ids = [loc['id'] for loc in locations]
-    lts = Loc_Tech.objects.filter(
-        Q(location_1_id__in=location_ids) | Q(location_2_id__in=location_ids))
-    lts = lts.values("id", "technology_id", "location_1_id", "location_2_id",
-                     "technology__pretty_name", "technology__pretty_tag")
-    loc_techs = {}
-    for lt in lts:
-        l1, l2 = lt["location_1_id"], lt["location_2_id"]
-        if l1 not in loc_techs.keys():
-            loc_techs[l1] = [lt]
-        else:
-            loc_techs[l1].append(lt)
-        if l2 is not None and l2 not in loc_techs.keys():
-            loc_techs[l2] = [lt]
-        elif l2 is not None:
-            loc_techs[l2].append(lt)
-
-    context = {
-        "nrel_api_key": settings.NREL_API_KEY,
-        "timezones": common_timezones,
-        "model": model,
-        "locations": locations,
-        "loc_techs": loc_techs,
-        "mapbox_token": settings.MAPBOX_TOKEN,
-        "can_edit": can_edit,
-        "help_content": Help_Guide.get_safe_html('locations'),
-    }
-
-    return render(request, "locations.html", context)
 
 
 # ------ Technologies
@@ -234,43 +210,6 @@ def loc_techs_view(request, model_uuid):
 
 
 # ------ Scenarios
-
-
-def scenarios_view(request, model_uuid):
-    """
-    View the "Scenarios" page
-
-    Parameters:
-    model_uuid (uuid): required
-
-    Returns: HttpResponse
-
-    Example:
-    http://0.0.0.0:8000/<model_uuid>/scenarios
-    """
-
-    model = Model.by_uuid(model_uuid)
-    try:
-        can_edit = model.handle_view_access(request.user)
-    except Exception:
-        return HttpResponseRedirect(reverse('home'))
-
-    scenarios = model.scenarios
-
-    session_scenario_id = request.session.get('scenario_id', None)
-    session_scenario = scenarios.filter(id=session_scenario_id).first()
-
-    context = {
-        "timezones": common_timezones,
-        "model": model,
-        "scenarios": scenarios,
-        "session_scenario": session_scenario,
-        "mapbox_token": settings.MAPBOX_TOKEN,
-        "can_edit": can_edit,
-        "help_content": Help_Guide.get_safe_html('scenarios'),
-    }
-
-    return render(request, "scenarios.html", context)
 
 
 @login_required

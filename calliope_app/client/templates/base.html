@@ -36,9 +36,6 @@
 	
 	<!-- Internal -->
 	<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
-	<script type="text/javascript" src="{% static 'js/main.js' %}"></script>
-	<script type="text/javascript" src="{% static 'js/units.js' %}"></script>
-	<script type="text/javascript" src="{% static 'js/data_imports.js' %}"></script>
 	<link rel="shortcut icon" type="image/png" href="{% static 'images/engage-logo-16.ico' %}"/>
 
 	<!-- Global site tag (gtag.js) - Google Analytics -->
@@ -79,20 +76,40 @@
 				<a href="{% url 'home' %}" style="text-decoration: none">
 					<button class="btn btn-sm" style="height:100%;padding:1px;">
 						&nbsp;&nbsp;
-						<img src="{% static 'images/engage-logo-horiz-sm.png' %}" height="100%" />
+						<img src="{% static 'images/engage-logo-horiz-sm_100x32.png' %}" height="100%" />
+						&nbsp;&nbsp;
 					</button>
 				</a>
 
-				<!-- Help -->
-				<button class="btn btn-sm" data-toggle="modal" data-target="#helpModal" style="height:100%;"><i class="fas fa-question-circle"></i>&nbsp;&nbsp; {% trans "Help" %}</button>
-
-				{% if user.is_authenticated %}
-					<!-- Model Sharing -->
-					<a href="{% url 'settings' %}"><button class="btn btn-sm" style="height:100%;"><i class="fas fa-users"></i>&nbsp;&nbsp;{% trans "Model Sharing" %}</button></a>
+				<!-- Model -->
+				{% if model %}
+					{% if can_edit == True %}
+					<button class="btn btn-sm" data-toggle="modal" data-target="#helpModal" style="height:100%;"><b>{{ model }}</b></button>
+					{% else %}
+					<button class="btn btn-sm" data-toggle="modal" data-target="#helpModal" style="height:100%; background-color: yellow;"><b>{{ model }}</b>&nbsp;&nbsp;&nbsp;&nbsp;[ {% trans "VIEW ONLY" %} ]</button>
+					{% endif %}
 				{% endif %}
 
+				{% if user.is_authenticated %}
+
+					<!-- Model Sharing -->
+					<a href="{% url 'settings' %}"><button class="btn btn-sm" style="height:100%;">{% trans "Share" %}</button></a>
+
+					<!-- Model Sharing -->
+					<a href="{% url 'settings' %}"><button class="btn btn-sm" style="height:100%;">{% trans "Account" %}</button></a>
+
+					<!-- Timezones -->
+					{% if timezones %}
+					<button class="btn btn-sm" data-toggle="modal" data-target="#helpModal" style="height:100%;">{% trans "Timezone" %}</button>
+					{% endif %}
+
+				{% endif %}
+
+				<!-- Help -->
+				<button class="btn btn-sm" data-toggle="modal" data-target="#helpModal" style="height:100%;">{% trans "Help" %}</button>
+
 				<a href="https://www.nrel.gov/" target="_blank">
-					<div style="float:right">&nbsp;&nbsp;&nbsp;<img src="{% static 'images/nrel_logo_full.jpg' %}" height="36px" />&nbsp;&nbsp;&nbsp;</div>
+					<div style="float:right">&nbsp;&nbsp;&nbsp;<img src="{% static 'images/nrel_logo_full_sm.jpg' %}" height="36px" />&nbsp;&nbsp;&nbsp;</div>
 				</a>
 
 				<!-- Languages -->
@@ -116,55 +133,6 @@
 				<script type="application/javascript">
 					var LANGUAGE_CODE = '{{ LANGUAGE_CODE }}';
 				</script>
-
-				{% if model %}
-				{% if can_edit == False %}<div class="text-sm" style="background-color: yellow; color: black; float: right; height: 30px; padding: 4px; margin-top: 3px;">&nbsp;<b>{% trans "VIEW ONLY" %}</b>&nbsp;</div>{% endif %}
-					<!-- Model -->
-					<div class="btn-group" style="height:30px;margin-top:3px;float:right;">
-						<button class="btn-dark dropdown-toggle text-sm" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;" type="button" data-toggle="dropdown">
-							&nbsp;&nbsp;<b><i class="fas fa-cogs"></i></b>&nbsp;&nbsp;{{ model }}
-							<span class="caret"></span>&nbsp;
-						</button>
-						<ul class="dropdown-menu dropdown-menu-right">
-							<li>&nbsp;&nbsp;{{ model }}<br><br></li>
-							<li><a href="{% url 'model' model.uuid %}"><h5>&nbsp;&nbsp;<i class="far fa-comments"></i>&nbsp;&nbsp;{% trans "Activity" %}</a>&nbsp;&nbsp;</h5></a></li>
-							<li><a href="{% url 'timeseries' model.uuid %}"><h5>&nbsp;&nbsp;<i class="fas fa-chart-line"></i>&nbsp;&nbsp;{% trans "Timeseries" %}</a>&nbsp;&nbsp;</h5></a></li>
-						</ul>
-					</div>
-				{% endif %}
-
-				{% if user.is_authenticated %}
-					<!-- User -->
-					<div class="btn-group" style="height:30px;margin-top:3px;float:right">
-						<button class="btn-primary dropdown-toggle text-sm" type="button" data-toggle="dropdown">
-							&nbsp;&nbsp;<i class="fas fa-user"></i>&nbsp;&nbsp;<span class="caret"></span>&nbsp;
-						</button>
-						<ul class="dropdown-menu dropdown-menu-left">
-							<li>&nbsp;&nbsp;{{ user.first_name }} {{ user.last_name }}<br>&nbsp;&nbsp;<span class="text-sm">{{ user.email }}<br>&nbsp;&nbsp;{{ user.user_profile.organization }}</span><br><br></li>
-							<li><a href="/settings/password/"><h6>&nbsp;&nbsp;<i class="fa fa-key"></i>&nbsp;&nbsp;{% trans "Change Password" %}</a>&nbsp;&nbsp;</h6></a></li>
-							<li><a href="/logout/?next=/login/"><h6>&nbsp;&nbsp;<i class="fas fa-sign-out-alt"></i>&nbsp;&nbsp;{% trans "Log out" %}</a>&nbsp;&nbsp;</h6></a></li>
-						</ul>
-					</div>
-					<!-- Timezone -->
-					{% if timezones %}
-					<div class="btn-group" style="height:30px;margin-top:3px;float:right">
-						<form style="font-size:13px;" action="{% url 'set_timezone' %}" method="post" >{% csrf_token %}
-							<input name="next" type="hidden" value="{{ request.path }}">
-							<select name="timezone" onchange="this.form.submit()" class="btn-default" style="margin-left:3px;width:100px;height:30px !important;border-radius:0;">
-								<option disabled>Select your timezone...</option>
-								{% for timezone in timezones %}
-									<option value="{{ timezone }}"{% if timezone == user.user_profile.timezone %} selected{% endif %}>
-										{{ timezone }}
-									</option>
-								{% endfor %}
-							</select>
-						</form>
-					</div>
-					{% endif %}
-				{% else %}
-					<!-- Login -->
-					<a href="{% url 'home' %}"><button class="btn-primary text-sm" style="height:30px;margin-top:3px;float:right">&nbsp;&nbsp;<i class="fas fa-user"></i>&nbsp;&nbsp;{% trans "LOGIN" %}&nbsp;&nbsp;</button></a>
-				{% endif %}
 
 			</div>
 		</div>

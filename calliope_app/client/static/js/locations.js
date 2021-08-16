@@ -1,43 +1,48 @@
 var new_id = 0;
-var map_mode = 'locations';
 
-$( document ).ready(function() {
+function pull_locations() {
 
-	// Resize Dashboard
-	splitter_resize();
-
-	$('#master-new').removeClass('hide');
-
-	// https://stackoverflow.com/questions/7317273/warn-user-before-leaving-web-page-with-unsaved-changes
-    window.addEventListener("beforeunload", function (e) {
-		if ($('tr[data-dirty=true]').length == 0) return(undefined);
-        var message = 'WARNING! Some locations are unsaved. If you leave this page, these changes will be lost.';
-        (e || window.event).returnValue = message; //Gecko + IE
-        return message; //Gecko + Webkit, Safari, Chrome etc.
-    });
-	
-	$('#master-new').unbind();
+	// Master Buttons
+	$('.master-btn').hide();
+	$('#master-new').show();
+	$('#master-settings, #master-save, #master-new, #master-cancel').unbind();
 	$('#master-new').on('click', function(e) {
 		$('#master-cancel').removeClass('hide');
 		e.stopPropagation();
 		$('#create_location_notice').remove();
 		add_location();
 	});
-
 	$('#master-cancel').on('click', function() {
 		var model_uuid = $('#header').data('model_uuid');
 		window.location = '/' + model_uuid + '/locations/';
 	});
-	
-	activate_location_elements();
-	
-	retrieve_map(true, undefined, undefined);
-	
-	if ($('#location_table tr[data-location_id]').length == 0) {
-		$('#locations_dashboard').prepend('<div id="create_location_notice" class="col-12 text-center"><br/><br/><h4>Create a location (initially at the center of the map) by clicking the "+ New" button above!</h4></div>');
-	}
 
-});
+    // Build UI
+	if ($('#location_table tr[data-location_id]').length == 0) { $('#locations_dashboard').prepend('<div id="create_location_notice" class="col-12 text-center"><br/><br/><h4>Create a location (initially at the center of the map) by clicking the "+ New" button above!</h4></div>') };
+	map_mode = 'locations';
+	retrieve_map(true, undefined, undefined);
+	$('#locations_dashboard').show();
+	$('.viz-spinner').show();
+	get_locations_dashboard();
+	build_selector();
+
+};
+
+function get_locations_dashboard() {
+	var model_uuid = $('#header').data('model_uuid');
+	$.ajax({
+		url: '/' + LANGUAGE_CODE + '/component/locations/',
+		data: {
+		  'model_uuid': model_uuid
+		},
+		dataType: 'json',
+		success: function (data) {
+			$('#locations_dashboard').html(data['locations_dashboard']);
+			activate_location_elements();
+			$('.viz-spinner').hide();
+		}
+	});
+};
 
 function add_location(lng, lat, blink) {
 	var add_row = $('.location-add-row').first().clone(),
@@ -113,11 +118,12 @@ function toggle_location_edit(location_id, edit) {
 			var location = locations.find(function(l) { return l.id == id });
 			marker.setLngLat([location.longitude, location.latitude]);
 			row.attr('data-dirty', '');
+			row.removeClass('table-warning').addClass('table-info');
 		} else {
 			row.attr('data-dirty', true);
 			row.find('.location-edit').toggleClass('btn-danger bg-danger').html('<i class="fas fa-times"></i> Cancel');
+			row.addClass('table-warning').removeClass('table-info');
 		}
-		row.toggleClass('table-warning');
 		row.find('.location-save, .location-delete, .location-name, .location-lat, .location-long, .location-area, .location-description, .location-edit-name, .location-edit-lat, .location-edit-long, .location-edit-area, .location-edit-description').toggleClass('hide');
 	}
 };
@@ -289,6 +295,7 @@ function activate_location_elements() {
 				dataType: 'json',
 				success: function (data) {
 					$('#location_table tr[data-location_id='+location_id+']').remove();
+					map_mode = 'locations';
 					retrieve_map(true, undefined, undefined);
 				}
 			});

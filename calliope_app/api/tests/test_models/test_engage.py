@@ -34,7 +34,7 @@ class HelpGuideTestCase(TestCase):
 
     def test_get_safe_html__not_available(self):
         result = Help_Guide.get_safe_html(key="unknown-key")
-        self.assertEqual(result, "Not Available")
+        self.assertEqual(result, "")
 
 
 class UserProfileTestCase(TestCase):

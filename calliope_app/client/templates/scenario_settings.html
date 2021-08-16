@@ -7,17 +7,17 @@
 		<tbody>
 			{% for param in parameters %}
 
-				{% if param.run_parameter.can_evolve %}
+				{% if param.run_parameter__can_evolve %}
 					<!-- Parameter Master Row For Evolving Parameters -->
-					<tr class="param_header table-default" data-param_id="{{ param.run_parameter.id }}">
+					<tr class="param_header table-default" data-param_id="{{ param.run_parameter_id }}">
 
 						<!-- Parameter Names -->
-						{% ifchanged param.run_parameter.pretty_name %}
-							<td style="cursor:help" data-toggle="tooltip" data-placement="right" title="{{ param.run_parameter.description }}">
-								<span class="text-sm"><b>{{ param.run_parameter.pretty_name }}</b></span>
+						{% ifchanged param.run_parameter__pretty_name %}
+							<td style="cursor:help" data-toggle="tooltip" data-placement="right" title="{{ param.run_parameter__description }}">
+								<span class="text-sm"><b>{{ param.run_parameter__pretty_name }}</b></span>
 							</td>
-							<td style="cursor:help" data-toggle="tooltip" data-placement="right" title="{{ param.run_parameter.description }}">
-								<span class="text-sm">{{ param.run_parameter.root }}.{{ param.run_parameter.name }}</span>
+							<td style="cursor:help" data-toggle="tooltip" data-placement="right" title="{{ param.run_parameter__description }}">
+								<span class="text-sm">{{ param.run_parameter__root }}.{{ param.run_parameter__name }}</span>
 							</td>
 							<td>
 								<button {% if not can_edit %}disabled{% endif %} type="button" class="btn btn-default btn-sm transparent run-parameter-value-add"><i class="fas fa-plus"></i> {% trans "Row" %}</button>
@@ -35,10 +35,10 @@
 						</td>
 
 						<!-- Parameter Values -->
-						<td colspan=2 class="head_value centered" data-param_id="{{ param.run_parameter.id }}">
-							{% if param.run_parameter.choices %}
+						<td colspan=2 class="head_value centered" data-param_id="{{ param.run_parameter_id }}">
+							{% if param.run_parameter__choices %}
 							<select {% if not can_edit %}disabled{% endif %} class="form-control run-parameter-value" value="{{ param.value }}" name="edit[value][{{ param.id }}]">
-								{% for choice in param.run_parameter.choices %}
+								{% for choice in param.run_parameter__choices %}
 								<option value="{{ choice }}" {% if choice == param.value %}selected{% endif %}>{{ choice }}</option>
 								{% endfor %}
 							</select>
@@ -49,9 +49,9 @@
 						</td>
 					</tr>
 
-					{% ifchanged param.run_parameter.pretty_name %}
+					{% ifchanged param.run_parameter__pretty_name %}
 						<!-- Parameter ADD Row For Evolving Parameters -->
-						<tr class="param_header_add table-warning" data-param_id="{{ param.run_parameter.id }}" style="display: none" >
+						<tr class="param_header_add table-warning" data-param_id="{{ param.run_parameter_id }}" style="display: none" >
 
 							<td colspan=3 style="border-top:none;"></td>
 							<td>
@@ -59,10 +59,10 @@
 							</td>
 
 							<!-- Parameter Values -->
-							<td colspan=2 class="head_value centered" data-param_id="{{ param.run_parameter.id }}">
-								{% if param.run_parameter.choices %}
+							<td colspan=2 class="head_value centered" data-param_id="{{ param.run_parameter_id }}">
+								{% if param.run_parameter__choices %}
 								<select {% if not can_edit %}disabled{% endif %} class="form-control add-run-parameter-value" name="add[{{ param.run_parameter_id }}][values][]">
-									{% for choice in param.run_parameter.choices %}
+									{% for choice in param.run_parameter__choices %}
 									<option>{{ choice }}</option>
 									{% endfor %}
 								</select>
@@ -75,22 +75,22 @@
 
 				{% else %}
 					<!-- Parameter Master Row For Static Parameters -->
-					<tr class="param_header table-default" data-param_id="{{ param.run_parameter.id }}">
+					<tr class="param_header table-default" data-param_id="{{ param.run_parameter_id }}">
 
 						<!-- Parameter Names -->
-						<td style="cursor:help" data-toggle="tooltip" data-placement="right" title="{{ param.run_parameter.description }}">
-							<span class="text-sm"><b>{{ param.run_parameter.pretty_name }}</b></span>
+						<td style="cursor:help" data-toggle="tooltip" data-placement="right" title="{{ param.run_parameter__description }}">
+							<span class="text-sm"><b>{{ param.run_parameter__pretty_name }}</b></span>
 						</td>
-						<td style="cursor:help" data-toggle="tooltip" data-placement="right" title="{{ param.run_parameter.description }}">
-							<span class="text-sm">{{ param.run_parameter.root }}.{{ param.run_parameter.name }}</span>
+						<td style="cursor:help" data-toggle="tooltip" data-placement="right" title="{{ param.run_parameter__description }}">
+							<span class="text-sm">{{ param.run_parameter__root }}.{{ param.run_parameter__name }}</span>
 						</td>
 						<td colspan=2></td>
 
 						<!-- Parameter Values -->
-						<td colspan=2 class="head_value centered" data-param_id="{{ param.run_parameter.id }}">
-							{% if param.run_parameter.choices %}
+						<td colspan=2 class="head_value centered" data-param_id="{{ param.run_parameter_id }}">
+							{% if param.run_parameter__choices %}
 							<select {% if not can_edit %}disabled{% endif %} class="form-control run-parameter-value" value="{{ param.value }}" name="edit[value][{{ param.id }}]">
-								{% for choice in param.run_parameter.choices %}
+								{% for choice in param.run_parameter__choices %}
 								<option value="{{ choice }}" {% if choice == param.value %}selected{% endif %}>{{ choice }}</option>
 								{% endfor %}
 							</select>
