@@ -161,6 +161,8 @@ def all_tech_params(request):
 
     timeseries = Timeseries_Meta.objects.filter(model=model, failure=False,
                                                 is_uploading=False)
+    carrier_multiselect = ParamsManager.get_tagged_params('carrier_multiselect')
+    print(carrier_multiselect)
     # Technology Definition
     context = {"technology": technology,
                "essentials": essentials,
@@ -169,7 +171,7 @@ def all_tech_params(request):
                "cplus_carrier_ids": ParamsManager.get_tagged_params('cplus_carrier'),
                "units_in_ids": ParamsManager.get_tagged_params('units_in'),
                "units_out_ids": ParamsManager.get_tagged_params('units_out'),
-               "carrier_multiselect_ids": ParamsManager.get_tagged_params('carrier_multiselect'),
+               "carrier_multiselect": carrier_multiselect,
                "can_edit": can_edit,
                }
     html_essentials = list(render(request,
@@ -186,7 +188,9 @@ def all_tech_params(request):
         "level": "1_tech",
         "timeseries": timeseries,
         "can_edit": can_edit,
-        "emissions": emissions
+        "emissions": emissions,
+        "carrier_multiselect_tuples": carrier_multiselect,
+
     }
     html_parameters = list(render(request, 'technology_parameters.html', context))[0]
 
