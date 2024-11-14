@@ -153,16 +153,14 @@ def all_tech_params(request):
     for carrier in model.carriers_old:
         if carrier not in carriers.keys():
             carriers[carrier] = {'rate':'kW','quantity':'kWh'}
-
     carriers = [{'name':c,'rate':v['rate'],'quantity':v['quantity']} for c,v in carriers.items()]
-
     for param in parameters:
         param['raw_units'] = param['units']
 
     timeseries = Timeseries_Meta.objects.filter(model=model, failure=False,
                                                 is_uploading=False)
     carrier_multiselect = ParamsManager.get_tagged_params('carrier_multiselect')
-    print(carrier_multiselect)
+    print(carrier_multiselect, carriers)
     # Technology Definition
     context = {"technology": technology,
                "essentials": essentials,

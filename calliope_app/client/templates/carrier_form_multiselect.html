@@ -1,24 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
   <style>
-    /* Prevent hover highlighting */
     .dropdown-item:hover,
     .dropdown-item:focus {
       background-color: transparent !important;
     }
 
-    /* Add gray background on click/active state */
     .dropdown-item:active {
       color: inherit !important;
-      background-color: #e9ecef !important; /* Bootstrap's gray-200 color */
+      background-color: #e9ecef !important; 
     }
 
-    /* Ensure checkboxes remain clickable */
     .form-check-input:hover {
       cursor: pointer;
     }
 
-    /* Remove text selection highlighting */
     .dropdown-item {
       user-select: none;
       -webkit-user-select: none;
@@ -26,10 +23,12 @@
       -ms-user-select: none;
     }
   </style>
+
   <div class="col-5" data-toggle="tooltip" data-placement="left" title="{{ carrier.description }}">
     {% if not carrier.value.0 %}<i class="fas fa-exclamation-triangle"></i>&nbsp;{% endif %}
     <b>{{ carrier.name }}:</b>
   </div>
+
   <div class="col-7">
     <div class="dropdown">
         <button class="btn border border-dark rounded-0 tech_carrier {% if carrier_id in units_in_ids %}units_in_selector{% endif %} {% if carrier_id in units_out_ids %}units_out_selector{% endif %} {% if not carrier.value.0 %}table-danger{% endif %}" 
@@ -44,26 +43,29 @@
         </button>
         <ul class="dropdown-menu dropdown-menu p-2" style="width:100%;" aria-labelledby="carrier-{{ carrier_id }}">
             {% for choice in carriers %}
+            {% if not choice.name|first == '[' %}
             <li>
-                <div class="form-check">
-                    <input class="form-check-input" 
-                           type="checkbox" 
-                           name="essentials[{{ carrier_id }}][]"
-                           value="{{ choice.name }}" 
-                           id="carrier{{ forloop.counter0 }}"
-                           data-rate="{{ choice.rate }}"
-                           data-quantity="{{ choice.quantity }}"
-                           {% if choice.name == carrier.value.0 %}checked{% endif %}>
-                    <label class="form-check-label dropdown-item" for="carrier{{ forloop.counter }}">
-                        {{ choice.name }} [{{choice.rate}},{{choice.quantity}}]
-                    </label>
-                </div>
-            </li>
+              <div class="form-check">
+                  <input class="form-check-input" 
+                         type="checkbox"
+                         name="essentials[{{ carrier_id }}][]"
+                         value="{{ choice.name }}" 
+                         id="carrier{{ forloop.counter0 }}"
+                         data-rate="{{ choice.rate }}"
+                         data-quantity="{{ choice.quantity }}">
+                  <label class="form-check-label dropdown-item" for="carrier{{ forloop.counter0 }}">
+                      {{ choice.name }} [{{choice.rate}},{{choice.quantity}}]
+                  </label>
+              </div>
+          </li>
+                  {% endif %}
             {% endfor %}
             <li><hr class="dropdown-divider"></li>
         </ul>
     </div>
 </div>
+
+
 <script>
   $(document).ready(function(){
     // For Bootstrap 5 tooltips
@@ -174,5 +176,30 @@
     }
     
     activate_carrier_dropdowns();
+
+    function parseDataValue(value) {
+        if (!value) return [];
+        if (value.startsWith('[')) {
+            // Remove brackets and split by comma
+            return value.slice(2, -2)  // Remove ['...']
+                       .split("', '")  // Split into array
+                       .map(item => item.trim());
+        }
+        return [value];
+    }
+    $('.tech_carrier').each(function() {
+        const dataValue = $(this).data('value');
+        const selectedValues = parseDataValue(dataValue);
+        
+        // Find checkboxes in this dropdown
+        $(this).next('.dropdown-menu').find('.form-check-input').each(function() {
+            const checkboxValue = $(this).val();
+            if (selectedValues.includes(checkboxValue)) {
+                $(this).prop('checked', true);
+            }
+        });
+    });
+
+
 });
-</script>
+</script> -->

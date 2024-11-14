@@ -34,7 +34,7 @@ $( document ).ready(function() {
                 dataType: 'json',
                 success: function (data) {
                     window.onbeforeunload = null;
-                    // location.reload();
+                    location.reload();
                 }
             });
 
