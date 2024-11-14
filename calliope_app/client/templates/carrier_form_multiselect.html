@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
   <style>
     .dropdown-item:hover,
     .dropdown-item:focus {
@@ -9,7 +8,7 @@
 
     .dropdown-item:active {
       color: inherit !important;
-      background-color: #e9ecef !important; 
+      background-color: #e9ecef !important;
     }
 
     .form-check-input:hover {
@@ -24,182 +23,215 @@
     }
   </style>
 
-  <div class="col-5" data-toggle="tooltip" data-placement="left" title="{{ carrier.description }}">
-    {% if not carrier.value.0 %}<i class="fas fa-exclamation-triangle"></i>&nbsp;{% endif %}
+  <div
+    class="col-5"
+    data-toggle="tooltip"
+    data-placement="left"
+    title="{{ carrier.description }}"
+  >
+    {% if not carrier.value.0 %}<i class="fas fa-exclamation-triangle"></i
+    >&nbsp;{% endif %}
     <b>{{ carrier.name }}:</b>
   </div>
 
   <div class="col-7">
     <div class="dropdown">
-        <button class="btn border border-dark rounded-0 tech_carrier {% if carrier_id in units_in_ids %}units_in_selector{% endif %} {% if carrier_id in units_out_ids %}units_out_selector{% endif %} {% if not carrier.value.0 %}table-danger{% endif %}" 
-                type="button"
-                id="carrier-{{ carrier_id }}" 
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-                style="width:100%; text-align: left; border-width: 1px !important;"
-                {% if not can_edit %}disabled{% endif %}
-                data-value="{{ carrier.value.0 }}">
-            Select carriers
-        </button>
-        <ul class="dropdown-menu dropdown-menu p-2" style="width:100%;" aria-labelledby="carrier-{{ carrier_id }}">
-            {% for choice in carriers %}
-            {% if not choice.name|first == '[' %}
-            <li>
-              <div class="form-check">
-                  <input class="form-check-input" 
-                         type="checkbox"
-                         name="essentials[{{ carrier_id }}][]"
-                         value="{{ choice.name }}" 
-                         id="carrier{{ forloop.counter0 }}"
-                         data-rate="{{ choice.rate }}"
-                         data-quantity="{{ choice.quantity }}">
-                  <label class="form-check-label dropdown-item" for="carrier{{ forloop.counter0 }}">
-                      {{ choice.name }} [{{choice.rate}},{{choice.quantity}}]
-                  </label>
-              </div>
-          </li>
-                  {% endif %}
-            {% endfor %}
-            <li><hr class="dropdown-divider"></li>
-        </ul>
+      <button
+        class="btn border border-dark rounded-0 tech_carrier {% if carrier_id in units_in_ids %}units_in_selector{% endif %} {% if carrier_id in units_out_ids %}units_out_selector{% endif %} {% if not carrier.value.0 %}table-danger{% endif %}"
+        type="button"
+        id="carrier-{{ carrier_id }}"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+        style="width: 100%; text-align: left; border-width: 1px !important"
+        {%
+        if
+        not
+        can_edit
+        %}disabled{%
+        endif
+        %}
+        data-value="{{ carrier.value.0 }}"
+      >
+        Select carriers
+      </button>
+      <ul
+        class="dropdown-menu dropdown-menu p-2"
+        style="width: 100%"
+        aria-labelledby="carrier-{{ carrier_id }}"
+      >
+        {% for choice in carriers %} {% if not choice.name|first == '[' %}
+        <li>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="essentials[{{ carrier_id }}][]"
+              value="{{ choice.name }}"
+              id="carrier{{ forloop.counter0 }}"
+              data-rate="{{ choice.rate }}"
+              data-quantity="{{ choice.quantity }}"
+            />
+            <label
+              class="form-check-label dropdown-item"
+              for="carrier{{ forloop.counter0 }}"
+            >
+              {{ choice.name }} [{{choice.rate}},{{choice.quantity}}]
+            </label>
+          </div>
+        </li>
+        {% endif %} {% endfor %}
+        <li><hr class="dropdown-divider" /></li>
+      </ul>
     </div>
-</div>
+  </div>
 
+  <script>
+    $(document).ready(function () {
+      // For Bootstrap 5 tooltips
+      const tooltipTriggerList = document.querySelectorAll(
+        '[data-bs-toggle="tooltip"]'
+      );
+      const tooltipList = [...tooltipTriggerList].map(
+        (tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl)
+      );
 
-<script>
-  $(document).ready(function(){
-    // For Bootstrap 5 tooltips
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-    
-    // Keep track of currently open dropdown
-    let currentOpenDropdown = null;
-    let currentOpenButton = null;
-    
-    function initializeCarrierDropdown(carrierId) {
+      // Keep track of currently open dropdown
+      let currentOpenDropdown = null;
+      let currentOpenButton = null;
+
+      function initializeCarrierDropdown(carrierId) {
         const dropdownButton = document.getElementById(`carrier-${carrierId}`);
         if (!dropdownButton) return;
-        
+
         const dropdownMenu = dropdownButton.nextElementSibling;
         const dropdown = new bootstrap.Dropdown(dropdownButton);
-        
+
         // Toggle dropdown on button click
-        dropdownButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            
-            // If clicking a different button than the currently open one
-            if (currentOpenButton && currentOpenButton !== dropdownButton) {
-                currentOpenDropdown.hide();
-                dropdown.show();
-                currentOpenDropdown = dropdown;
-                currentOpenButton = dropdownButton;
-            }
-            // If clicking the same button that's currently open
-            else if (currentOpenButton === dropdownButton) {
-                dropdown.hide();
-                currentOpenDropdown = null;
-                currentOpenButton = null;
-            }
-            // If no dropdown is currently open
-            else {
-                dropdown.show();
-                currentOpenDropdown = dropdown;
-                currentOpenButton = dropdownButton;
-            }
+        dropdownButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+
+          // If clicking a different button than the currently open one
+          if (currentOpenButton && currentOpenButton !== dropdownButton) {
+            currentOpenDropdown.hide();
+            dropdown.show();
+            currentOpenDropdown = dropdown;
+            currentOpenButton = dropdownButton;
+          }
+          // If clicking the same button that's currently open
+          else if (currentOpenButton === dropdownButton) {
+            dropdown.hide();
+            currentOpenDropdown = null;
+            currentOpenButton = null;
+          }
+          // If no dropdown is currently open
+          else {
+            dropdown.show();
+            currentOpenDropdown = dropdown;
+            currentOpenButton = dropdownButton;
+          }
         });
-        
+
         // Update tracking when dropdown is hidden (e.g., by clicking outside)
-        dropdownButton.addEventListener('hidden.bs.dropdown', () => {
-            if (currentOpenButton === dropdownButton) {
-                currentOpenDropdown = null;
-                currentOpenButton = null;
-            }
+        dropdownButton.addEventListener("hidden.bs.dropdown", () => {
+          if (currentOpenButton === dropdownButton) {
+            currentOpenDropdown = null;
+            currentOpenButton = null;
+          }
         });
-        
+
         // Handle checkbox changes
-        $(`#carrier-${carrierId}`).closest('.dropdown').find('.form-check-input').on('change', function() {
-            const button = $(this).closest('.dropdown').find('.btn');
-            button.addClass('table-warning');
+        $(`#carrier-${carrierId}`)
+          .closest(".dropdown")
+          .find(".form-check-input")
+          .on("change", function () {
+            const button = $(this).closest(".dropdown").find(".btn");
+            button.addClass("table-warning");
             check_unsaved();
-            
-            if (button.hasClass('units_in_selector') || button.hasClass('units_out_selector')){
-                const in_sel = $('.units_in_selector').first();
-                const carrier_in = {
-                    'name': in_sel.text(),
-                    'rate_unit': in_sel.find('input:checked').data('rate'),
-                    'quantity_unit': in_sel.find('input:checked').data('quantity')
-                };
-                
-                const out_sel = $('.units_out_selector').first();
-                const carrier_out = {
-                    'name': out_sel.text(),
-                    'rate_unit': out_sel.find('input:checked').data('rate'),
-                    'quantity_unit': out_sel.find('input:checked').data('quantity')
-                };
-                
-                update_carriers(carrier_in, carrier_out, false);
+
+            if (
+              button.hasClass("units_in_selector") ||
+              button.hasClass("units_out_selector")
+            ) {
+              const in_sel = $(".units_in_selector").first();
+              const carrier_in = {
+                name: in_sel.text(),
+                rate_unit: in_sel.find("input:checked").data("rate"),
+                quantity_unit: in_sel.find("input:checked").data("quantity"),
+              };
+
+              const out_sel = $(".units_out_selector").first();
+              const carrier_out = {
+                name: out_sel.text(),
+                rate_unit: out_sel.find("input:checked").data("rate"),
+                quantity_unit: out_sel.find("input:checked").data("quantity"),
+              };
+
+              update_carriers(carrier_in, carrier_out, false);
             }
 
-            if ($(this).val() == '-- New Carrier --') {
-                $("#carriersModal").dialog();
-                $(o).html(carrier);
-                button.append(o);
+            if ($(this).val() == "-- New Carrier --") {
+              $("#carriersModal").dialog();
+              $(o).html(carrier);
+              button.append(o);
             }
+          });
+      }
+
+      function activate_carrier_dropdowns() {
+        $(".tech_carrier").each(function () {
+          const carrierId = $(this).attr("id").split("-")[1];
+          if (carrierId) {
+            initializeCarrierDropdown(carrierId);
+          }
         });
-    }
-    
-    function activate_carrier_dropdowns() {
-        $('.tech_carrier').each(function() {
-            const carrierId = $(this).attr('id').split('-')[1];
-            if (carrierId) {
-                initializeCarrierDropdown(carrierId);
-            }
-        });
-        
+
         // Close dropdowns when clicking outside
-        $(document).on('click', function(e) {
-            if (!$(e.target).closest('.dropdown').length && currentOpenDropdown) {
-                currentOpenDropdown.hide();
-                currentOpenDropdown = null;
-                currentOpenButton = null;
-            }
+        $(document).on("click", function (e) {
+          if (!$(e.target).closest(".dropdown").length && currentOpenDropdown) {
+            currentOpenDropdown.hide();
+            currentOpenDropdown = null;
+            currentOpenButton = null;
+          }
         });
 
         // Handle escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && currentOpenDropdown) {
-                currentOpenDropdown.hide();
-                currentOpenDropdown = null;
-                currentOpenButton = null;
-            }
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && currentOpenDropdown) {
+            currentOpenDropdown.hide();
+            currentOpenDropdown = null;
+            currentOpenButton = null;
+          }
         });
-    }
-    
-    activate_carrier_dropdowns();
+      }
 
-    function parseDataValue(value) {
+      activate_carrier_dropdowns();
+
+      function parseDataValue(value) {
         if (!value) return [];
-        if (value.startsWith('[')) {
-            // Remove brackets and split by comma
-            return value.slice(2, -2)  // Remove ['...']
-                       .split("', '")  // Split into array
-                       .map(item => item.trim());
+        if (value.startsWith("[")) {
+          // Remove brackets and split by comma
+          return value
+            .slice(2, -2) // Remove ['...']
+            .split("', '") // Split into array
+            .map((item) => item.trim());
         }
         return [value];
-    }
-    $('.tech_carrier').each(function() {
-        const dataValue = $(this).data('value');
+      }
+      $(".tech_carrier").each(function () {
+        const dataValue = $(this).data("value");
         const selectedValues = parseDataValue(dataValue);
-        
+
         // Find checkboxes in this dropdown
-        $(this).next('.dropdown-menu').find('.form-check-input').each(function() {
+        $(this)
+          .next(".dropdown-menu")
+          .find(".form-check-input")
+          .each(function () {
             const checkboxValue = $(this).val();
             if (selectedValues.includes(checkboxValue)) {
-                $(this).prop('checked', true);
+              $(this).prop("checked", true);
             }
-        });
+          });
+      });
     });
-
-
-});
-</script> -->
+  </script>
+</html>
