@@ -24,7 +24,6 @@ $(document).ready(function () {
         $("#form_data_2 :input")
       ).serializeJSON();
       var form_data = Object.assign({}, form_data_1, form_data_2);
-      console.log(form_data);
 
       $.ajax({
         url: "/" + LANGUAGE_CODE + "/api/update_tech_params/",
