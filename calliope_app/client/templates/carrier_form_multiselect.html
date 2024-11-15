@@ -67,15 +67,15 @@
               type="checkbox"
               name="essentials[{{ carrier_id }}][]"
               value="{{ choice.name }}"
-              id="carrier{{ forloop.counter0 }}"
+              id="carrier_{{ carrier_id }}_{{ forloop.counter0 }}"
               data-rate="{{ choice.rate }}"
               data-quantity="{{ choice.quantity }}"
             />
             <label
               class="form-check-label dropdown-item"
-              for="carrier{{ forloop.counter0 }}"
+              for="carrier_{{ carrier_id }}_{{ forloop.counter0 }}"
             >
-              {{ choice.name }} [{{choice.rate}},{{choice.quantity}}]
+              {{ choice.name }} [{{ choice.rate }}, {{ choice.quantity }}]
             </label>
           </div>
         </li>
