@@ -17,9 +17,7 @@ $(document).ready(function () {
   // Save modified parameters
   $("#master-save").on("click", function () {
     if (validate_params()) {
-      var form_data_1 = $("#form_data_1 :input").serializeJSON(
-        (useIntKeysAsArrayIndex = true)
-      );
+      var form_data_1 = $("#form_data_1 :input").serializeJSON();
       var form_data_2 = filter_param_inputs(
         $("#form_data_2 :input")
       ).serializeJSON();
