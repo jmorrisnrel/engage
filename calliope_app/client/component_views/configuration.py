@@ -153,15 +153,14 @@ def all_tech_params(request):
     for carrier in model.carriers_old:
         if carrier not in carriers.keys():
             carriers[carrier] = {'rate':'kW','quantity':'kWh'}
-
     carriers = [{'name':c,'rate':v['rate'],'quantity':v['quantity']} for c,v in carriers.items()]
-
     for param in parameters:
         param['raw_units'] = param['units']
 
     timeseries = Timeseries_Meta.objects.filter(model=model, failure=False,
                                                 is_uploading=False)
-
+    carrier_multiselect = ParamsManager.get_tagged_params('carrier_multiselect')
+    print(carrier_multiselect, carriers)
     # Technology Definition
     context = {"technology": technology,
                "essentials": essentials,
@@ -170,13 +169,14 @@ def all_tech_params(request):
                "cplus_carrier_ids": ParamsManager.get_tagged_params('cplus_carrier'),
                "units_in_ids": ParamsManager.get_tagged_params('units_in'),
                "units_out_ids": ParamsManager.get_tagged_params('units_out'),
-               "can_edit": can_edit}
+               "carrier_multiselect": carrier_multiselect,
+               "can_edit": can_edit,
+               }
     html_essentials = list(render(request,
                                   'technology_essentials.html',
                                   context))[0]
 
     emissions = ParamsManager.emission_categories()
-
     # Parameters Table
     context = {
         "technology": technology,
@@ -186,7 +186,9 @@ def all_tech_params(request):
         "level": "1_tech",
         "timeseries": timeseries,
         "can_edit": can_edit,
-        "emissions": emissions
+        "emissions": emissions,
+        "carrier_multiselect_tuples": carrier_multiselect,
+
     }
     html_parameters = list(render(request, 'technology_parameters.html', context))[0]
 
