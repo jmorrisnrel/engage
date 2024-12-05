@@ -2853,7 +2853,7 @@
       "is_essential": "False",
       "is_carrier": "False",
       "choices": "[]",
-      "tags": "[]",
+      "tags": "[\"carrier_out_duplicate\"]",
       "index": "[]",
       "dim": "[]"
     },

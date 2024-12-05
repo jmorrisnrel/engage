@@ -894,6 +894,8 @@ class Tech_Param(models.Model):
                                         blank=True, null=True)
     model = models.ForeignKey(Model, on_delete=models.CASCADE)
     flags = ArrayField(models.CharField(max_length=20,blank=True),default=list)
+    index = ArrayField(models.CharField(max_length=200, blank=True),blank=True,null=True)
+    dim = ArrayField(models.CharField(max_length=200, blank=True),blank=True,null=True)
     created = models.DateTimeField(auto_now_add=True, null=True)
     updated = models.DateTimeField(auto_now=True, null=True)
     deleted = models.DateTimeField(default=None, editable=False, null=True)
@@ -1139,6 +1141,8 @@ class Loc_Tech_Param(models.Model):
                                         blank=True, null=True)
     model = models.ForeignKey(Model, on_delete=models.CASCADE)
     flags = ArrayField(models.CharField(max_length=20,blank=True),default=list)
+    index = ArrayField(models.CharField(max_length=200, blank=True),blank=True,null=True)
+    dim = ArrayField(models.CharField(max_length=200, blank=True),blank=True,null=True)
     created = models.DateTimeField(auto_now_add=True, null=True)
     updated = models.DateTimeField(auto_now=True, null=True)
     deleted = models.DateTimeField(default=None, editable=False, null=True)
@@ -1489,7 +1493,7 @@ class ParamsManager():
 
         if level in ['1_tech', '2_loc_tech']:
             values += ["year", "timeseries", "timeseries_meta_id",
-                       "raw_value", "value"]
+                       "raw_value", "value","index","dim"]
 
         # System-Wide Handling
         if systemwide is False:
@@ -1521,7 +1525,9 @@ class ParamsManager():
                 'timeseries': param["timeseries"] if 'timeseries' in param.keys() else False,
                 'timeseries_meta_id': param["timeseries_meta_id"] if 'timeseries_meta_id' in param.keys() else 0,
                 'value': param["value"] if "value" in param.keys() else param["default_value"],
-                'tags': param["parameter__tags"]
+                'tags': param["parameter__tags"],
+                'index': param["index"] if 'index' in param.keys() else [],
+                'dim': param["dim"] if 'dim' in param.keys() else []
                 }
             data.append(param_dict)
 

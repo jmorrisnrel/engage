@@ -40,9 +40,9 @@
 				{% endifchanged %}
 			{% endif %}{% endif %}
 			{% with parameters|return_item:forloop.counter as next_param %}
-			{% ifchanged param.parameter_name or param.parameter_root %}
+			{% ifchanged param.parameter_name or param.parameter_root or param.index %}
 				<!-- Parameter Master Row -->
-				<tr class="{% if next_param.parameter_id == param.parameter_id %}param_header{% endif %} {% if param.level == level %}{% if param.parameter_category == 'Costs: Monetary' %}table-success{% elif param.parameter_category in emissions %}table-info{% else %}table-primary{% endif %}{% else %}table-default{% endif %}" data-param_id={{ param.parameter_id }}>
+				<tr class="{% if next_param.parameter_id == param.parameter_id %}param_header{% endif %} {% if param.level == level %}{% if param.parameter_category == 'Costs: Monetary' %}table-success{% elif param.parameter_category in emissions %}table-info{% else %}table-primary{% endif %}{% else %}table-default{% endif %} {% if param.parameter_id in carrier_out_duplicate %}carrier_out_duplicate{% endif %} {% if param.parameter_id in carrier_in_duplicate %}carrier_in_duplicate{% endif %}" data-param_id={{ param.parameter_id }}>
 					<!-- Favorite Buttons -->
 					{% if param.parameter_category == "Costs: Monetary" %}
 					<td class="table-success centered"><i {% if not can_edit %}disabled{% endif %} class="fas fa-star" data-toggle="tooltip" data-placement="right" title="{% trans 'Mark parameter as favorite' %}"></i></td>
@@ -57,7 +57,7 @@
 					<!-- Parameter Names -->
 					<td style="cursor:help;width:450px;" data-toggle="tooltip" data-html="true" data-placement="bottom" title="{{ param.parameter_root }}.{{ param.parameter_name }}: {{ param.parameter_description }}">
 						&nbsp;&nbsp;
-						<span class="text-sm"></span><b>{{ param.parameter_pretty_name }}</b>
+						<span class="text-sm"></span><b>{{ param.parameter_pretty_name }} {% if param.dim %}{{ param.dim.0 }}:{% endif %} {% if param.index %}{{ param.index.0 }}{% endif %}</b>
 					</td>
 					<!-- Parameter Timeseries Indicator -->
 					<td style="width:200px;" class="centered">
@@ -71,17 +71,17 @@
 					<!-- Parameter Value (or Expand) -->
 					{% if param.timeseries == True %}
 					<td class="centered" data-param_id={{ param.parameter_id }}>
-						<select {% if not can_edit %}disabled{% endif %} data-ts_id="{{ param.timeseries_meta_id }}" class="form-control parameter-value parameter-value-existing timeseries" name="edit[timeseries][{{ param.parameter_id }}]" data-value="{{ param.timeseries_meta_id }}">
+						<select {% if not can_edit %}disabled{% endif %} data-ts_id="{{ param.timeseries_meta_id }}" class="form-control parameter-value parameter-value-existing timeseries" name="{% if param.index %} edit[indexed_timeseries][param.dim.0][param.index.0][{{ param.parameter_id }}] {% else %} edit[timeseries][{{ param.parameter_id }}]{% endif %}" data-value="{{ param.timeseries_meta_id }}">
 							<option disabled selected value> -- select a timeseries -- </option>
 							{% for ts in timeseries %}
 							<option value="{{ ts.id }}" {% if ts.id == param.timeseries_meta_id|add:"0" %}selected{% endif %}>{{ ts }}</option>
 							{% endfor %}
 						</select>
 					</td>
-					{% elif next_param.parampeter_id != param.parameter_id and param.year == 0 %}
+					{% elif next_param.parameter_id != param.parameter_id and param.year == 0 or next_param.index != param.index and param.year == 0 %}
 					<td class="head_value centered" style="position:relative;" data-param_id={{ param.parameter_id }}>
 						{% if param.choices or param.parameter_is_carrier %}
-						<select {% if not can_edit %}disabled{% endif %} class="static_inputs form-control parameter-value parameter-value-existing" name="edit[parameter][{{ param.parameter_id }}]" data-value="{{ param.value }}">
+						<select {% if not can_edit %}disabled{% endif %} class="static_inputs form-control parameter-value parameter-value-existing" name="{% if param.index %} edit[indexed_parameter][param.dim.0][param.index.0][{{ param.parameter_id }}] {% else %} edit[parameter][{{ param.parameter_id }}]{% endif %}" data-value="{{ param.value }}">
 							{% if param.choices %}
 								{% for choice in param.choices %}
 								<option value="{{ choice }}" {% if choice == param.value %}selected{% endif %}>{{ choice }}</option>
@@ -96,7 +96,7 @@
 							{% endif %}
 						</select>
 						{% else %}
-						<input {% if not can_edit %}disabled{% endif %} type="text" class="static_inputs form-control parameter-value parameter-value-existing {% if param.units == '<sub>ABC</sub>' %}text-value{% else %}float-value{% endif %}" value="{{ param.placeholder|add_commas }}" data-value="{{ param.placeholder|add_commas }}" name="edit[parameter][{{ param.parameter_id }}]">
+						<input {% if not can_edit %}disabled{% endif %} type="text" class="static_inputs form-control parameter-value parameter-value-existing {% if param.units == '<sub>ABC</sub>' %}text-value{% else %}float-value{% endif %}" value="{{ param.placeholder|add_commas }}" data-value="{{ param.placeholder|add_commas }}" name="{% if param.index %} edit[indexed_parameter][param.dim.0][param.index.0][{{ param.parameter_id }}] {% else %} edit[parameter][{{ param.parameter_id }}]{% endif %}">
 						{% endif %}
 						<div class="view_rows hide"><i class="fas fa-bars"></i>&nbsp;&nbsp;{% trans "Show" %}</div>
 						<div class="hide_rows hide"><i class="fas fa-bars"></i>&nbsp;&nbsp;{% trans "Hide" %}</div>
@@ -108,15 +108,19 @@
 					</td>
 					{% endif %}
 					<!-- Parameter Values -->
-					{% if param.timeseries == False and not param.choices and not param.parameter_is_carrier and next_param.parameter_id != param.parameter_id and param.year == 0 %}
-					<td class="parameter-target-value" style="text-align:right;" data-value="{{ param.value|add_commas }}">
-						{{ param.value|add_commas }}
-					</td>
+					{% if next_param.parameter_id != param.parameter_id or next_param.index != param.index %}
+						{% if param.timeseries == False and not param.choices and not param.parameter_is_carrier and param.year == 0 %}
+						<td class="parameter-target-value" style="text-align:right;" data-value="{{ param.value|add_commas }}">
+							{{ param.value|add_commas }}
+						</td>
+						{% else %}
+						<td></td>
+						{% endif %}
 					{% else %}
 					<td></td>
 					{% endif %}
 					<!-- Parameter Units -->
-					<td style="width:80px;" class="text-sm parameter-units" data-value="{{ param.units }}" raw-value="{{ param.raw_units }}">{{ param.units|safe }}</td>
+					<td style="width:80px;" class="text-sm parameter-units" data-value="{{ param.units }}" raw-value="{{ param.raw_units }}" {% if param.parameter_id in carrier_out_duplicate %}out_carrier="{{ param.index.0 }}"{% endif %} {% if param.parameter_id in carrier_in_duplicate %}in_carrier="{{ param.index.0 }}"{% endif %} >{{ param.units|safe }}</td>
 					<!-- Parameter Edit Buttons -->
 					<td style="width:100px;" class="centered">
 						<button {% if not can_edit %}disabled{% endif %} tabindex="-1" type="button" class="btn btn-default btn-sm transparent parameter-reset hide"><i class="fas fa-undo"></i></button>
@@ -202,7 +206,7 @@
 				</tr>
 			{% endif %}
 			<!-- Parameter Add Row (Always Hidden) -->
-			{% if next_param.parameter_id != param.parameter_id and param.timeseries == False %}
+			{% if next_param.parameter_id != param.parameter_id and param.timeseries == False and next_param.index != param.index %}
 				<tr class="param_row add_param_row_min param_row_min add_param_row_{{ param.parameter_id }} param_row_{{ param.parameter_id }}" data-param_id={{ param.parameter_id }}>
 					<td colspan=3 style="background-color: white;"></td>
 					<td class="centered">

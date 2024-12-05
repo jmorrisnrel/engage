@@ -55,29 +55,35 @@ $(document).ready(function () {
       .closest(".dropdown")
       .find(".form-check-input")
       .on("change", function () {
-        const button = $(this).closest(".dropdown").find(".btn");
+        const dropdown = $(this).closest(".dropdown");
+        const button = dropdown.find(".btn");
         button.addClass("table-warning");
         check_unsaved();
 
         if (
-          button.hasClass("units_in_selector") ||
-          button.hasClass("units_out_selector")
+          dropdown.hasClass("units_in_selector") ||
+          dropdown.hasClass("units_out_selector")
         ) {
           const in_sel = $(".units_in_selector").first();
+          const in_check = in_sel.find("input:checked");
           const carrier_in = {
-            name: in_sel.text(),
-            rate_unit: in_sel.find("input:checked").data("rate"),
-            quantity_unit: in_sel.find("input:checked").data("quantity"),
+            name: in_check.val(),
+            rate_unit: in_check.data("rate"),
+            quantity_unit: in_check.data("quantity"),
           };
 
           const out_sel = $(".units_out_selector").first();
+          const out_check = out_sel.find("input:checked");
           const carrier_out = {
-            name: out_sel.text(),
-            rate_unit: out_sel.find("input:checked").data("rate"),
-            quantity_unit: out_sel.find("input:checked").data("quantity"),
+            name: out_check.val(),
+            rate_unit: out_check.data("rate"),
+            quantity_unit: out_check.data("quantity"),
           };
-
           update_carriers(carrier_in, carrier_out, false);
+        }
+
+        if (dropdown.hasClass("units_out_selector")) {
+          
         }
 
         if ($(this).val() == "-- New Carrier --") {
@@ -89,7 +95,7 @@ $(document).ready(function () {
   }
 
   function activate_carrier_dropdowns() {
-    $(".tech_carrier").each(function () {
+    $(".tech_carrier_multi").each(function () {
       const carrierId = $(this).attr("id").split("-")[1];
       if (carrierId) {
         initializeCarrierDropdown(carrierId);
@@ -128,7 +134,7 @@ $(document).ready(function () {
     }
     return [value];
   }
-  $(".tech_carrier").each(function () {
+  $(".tech_carrier_multi").each(function () {
     const dataValue = $(this).data("value");
     const selectedValues = parseDataValue(dataValue);
 
