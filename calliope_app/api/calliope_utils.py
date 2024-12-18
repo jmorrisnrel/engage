@@ -250,7 +250,7 @@ def run_clustered(model_path, idx, logger):
 
     # NOTE: with log_to_console=True, the model run would get hanging if error happened.
     if model.run_config['solver'] == 'appsi_highs':
-        model.run_config['solver_options']['log_to_console'] = False
+        model.run_config['solver_options'] = {'log_to_console': False}
 
     model.run()
     _write_outputs(model, model_path)
