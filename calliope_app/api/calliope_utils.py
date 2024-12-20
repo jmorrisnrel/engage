@@ -3,19 +3,20 @@ This module contains support functions and libraries used in
 interfacing with Calliope.
 """
 
-import os
-import yaml
-import shutil
-from calliope import Model as CalliopeModel
-import pandas as pd
-import json
-import copy
 import calendar
+import copy
+import json
+import logging
+import os
+import shutil
+
+import calliope
+import pandas as pd
+import yaml
+from calliope import Model as CalliopeModel
 
 from api.models.configuration import Scenario_Param, Scenario_Loc_Tech, \
-    Location, Tech_Param, Loc_Tech_Param, Loc_Tech, Scenario, Carrier
-from api.models.outputs import Run
-import logging
+    Location, Tech_Param, Loc_Tech_Param, Loc_Tech, Scenario
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ def get_model_yaml_set(run, scenario_id, year):
         # NOTE: deprecated run parameter in the database
         if unique_param == "run.objective_options":
             continue
-        
+
         if unique_param not in unique_params:
             # If parameter hasn't been set, add to Return List
             unique_params.append(unique_param)
@@ -164,7 +165,7 @@ def get_loc_techs_yaml_set(scenario_id, year):
                     value = float(param.value) / 100
                 else:
                     value = param.value
-                    
+
                 param_list = [parent_type, location, 'techs',
                               param.loc_tech.technology.calliope_name]+\
                               unique_param.split('.')
@@ -173,7 +174,7 @@ def get_loc_techs_yaml_set(scenario_id, year):
 
 def get_carriers_yaml_set(scenario_id):
     model = Scenario.objects.get(id=scenario_id).model
-    
+
     carriers_yaml_set = {}
     for carrier in model.carriers.all():
         carriers_yaml_set[carrier.name] = {'rate':carrier.rate_unit,'quantity':carrier.quantity_unit}
@@ -229,6 +230,11 @@ def run_basic(model_path, logger):
     model = CalliopeModel(config=model_path)
     logger.info(model.info())
     logger.info(model._model_data.coords.get("techs_non_transmission", []))
+
+    # NOTE: with log_to_console=True, the model run would get hanging if error happened.
+    if model.run_config['solver'] == 'appsi_highs':
+        model.run_config['solver_options'] = {'log_to_console': False}
+
     model.run()
     _write_outputs(model, model_path)
     return model.results.termination_condition
@@ -241,6 +247,11 @@ def run_clustered(model_path, idx, logger):
     _set_subset_time(model_path)
     _set_capacities(model_path)
     model = CalliopeModel(config=model_path)
+
+    # NOTE: with log_to_console=True, the model run would get hanging if error happened.
+    if model.run_config['solver'] == 'appsi_highs':
+        model.run_config['solver_options'] = {'log_to_console': False}
+
     model.run()
     _write_outputs(model, model_path)
     if model.results.termination_condition != 'optimal':
@@ -598,6 +609,7 @@ def apply_gradient(old_inputs,old_results,new_inputs,old_year,new_year,logger):
                             built_loc_techs[l][t+'_'+str(old_year)] = loc_tech_b
 
                             new_loctechs[loc_type][l]['techs'][t+'_'+str(old_year)] = loc_tech_b
+    
     for t in built_tech_names.keys():
         tech = old_model['techs'][t]
         tech_b = copy.deepcopy(tech)
@@ -616,7 +628,7 @@ def apply_gradient(old_inputs,old_results,new_inputs,old_year,new_year,logger):
             [tech_b[cost].pop(c) for c in ['energy_cap','interest_rate','storage_cap'] if c in tech_b[cost]]
             if len(tech_b[cost].keys()) == 0:
                 tech_b.pop(cost)
-        
+
         tech_b['essentials']['name'] += ' '+str(old_year)
 
         for x in tech_b:
