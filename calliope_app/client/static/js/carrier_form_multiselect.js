@@ -10,8 +10,7 @@ $(document).ready(function () {
   let currentOpenDropdown = null;
   let currentOpenButton = null;
 
-  function initializeCarrierDropdown(carrierId) {
-    const dropdownButton = document.getElementById(`carrier-${carrierId}`);
+  function initializeMultiselectDropdown(dropdownButton) {
     if (!dropdownButton) return;
 
     const dropdownMenu = dropdownButton.nextElementSibling;
@@ -49,9 +48,12 @@ $(document).ready(function () {
         currentOpenButton = null;
       }
     });
+  }
+
+  function initializeCarrierDropdown(dropdownButton){
 
     // Handle checkbox changes
-    $(`#carrier-${carrierId}`)
+    $(dropdownButton)
       .closest(".dropdown")
       .find(".form-check-input")
       .on("change", function () {
@@ -60,30 +62,28 @@ $(document).ready(function () {
         button.addClass("table-warning");
         check_unsaved();
 
-        if (
-          dropdown.hasClass("units_in_selector") ||
-          dropdown.hasClass("units_out_selector")
-        ) {
-          const in_sel = $(".units_in_selector").first();
-          const in_check = in_sel.find("input:checked");
-          const carrier_in = {
-            name: in_check.val(),
-            rate_unit: in_check.data("rate"),
-            quantity_unit: in_check.data("quantity"),
-          };
-
-          const out_sel = $(".units_out_selector").first();
-          const out_check = out_sel.find("input:checked");
-          const carrier_out = {
-            name: out_check.val(),
-            rate_unit: out_check.data("rate"),
-            quantity_unit: out_check.data("quantity"),
-          };
-          update_carriers(carrier_in, carrier_out, false);
-        }
-
-        if (dropdown.hasClass("units_out_selector")) {
-          
+        if (button.data('dup-tag')){
+          carrier = this.value;
+          existing_dup_rows = $('tr[data-index="'+carrier+'"][data-dup-tag="'+button.data('dup-tag')+'"]');
+          if ((existing_dup_rows.length > 0) && ($(this).is(':checked'))){
+            existing_dup_rows.each(function(){
+              if ($(this).hasClass('table-danger')){
+                $(this).find(".parameter-delete").click();
+              }
+              
+            });
+          } else if (existing_dup_rows.length > 0) {
+            existing_dup_rows.each(function(){
+              $(this).find(".parameter-delete").click();
+            });
+          } else if ($(this).is(':checked')) {
+            dup_parameter_rows(button.attr('data-dup-tag'),carrier,'carrier');
+          }
+          if (button.data('dup-tag') == 'multi_carrier_out'){
+						dup_row_units(button.data('dup-tag'),carrier,$(this).attr('rate_unit'),$(this).attr('quantity_unit'),false);
+					} else if (button.data('dup-tag') == 'multi_carrier_in'){
+						dup_row_units(button.data('dup-tag'),carrier,$(this).attr('rate_unit'),$(this).attr('quantity_unit'),true);
+					}
         }
 
         if ($(this).val() == "-- New Carrier --") {
@@ -94,12 +94,12 @@ $(document).ready(function () {
       });
   }
 
-  function activate_carrier_dropdowns() {
-    $(".tech_carrier_multi").each(function () {
-      const carrierId = $(this).attr("id").split("-")[1];
-      if (carrierId) {
-        initializeCarrierDropdown(carrierId);
-      }
+  function activate_carrier_multiselects() {
+    $(".param_multiselect").each(function () {
+        initializeMultiselectDropdown(this);
+        if ($(this).hasClass('carrier_multi')){
+          initializeCarrierDropdown(this);
+        }
     });
 
     // Close dropdowns when clicking outside
@@ -120,9 +120,8 @@ $(document).ready(function () {
       }
     });
   }
-
-  activate_carrier_dropdowns();
-
+  activate_carrier_multiselects();
+  
   function parseDataValue(value) {
     if (!value) return [];
     if (value.startsWith("[")) {
@@ -134,10 +133,10 @@ $(document).ready(function () {
     }
     return [value];
   }
-  $(".tech_carrier_multi").each(function () {
+  $(".param_multiselect").each(function () {
     const dataValue = $(this).data("value");
     const selectedValues = parseDataValue(dataValue);
-
+    
     // Find checkboxes in this dropdown
     $(this)
       .next(".dropdown-menu")

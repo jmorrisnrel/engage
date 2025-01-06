@@ -923,11 +923,18 @@ class Tech_Param(models.Model):
                     technology_id=technology.id,
                     parameter_id=key).hard_delete()
                 if value:
-                    cls.objects.create(
-                        model_id=technology.model_id,
-                        technology_id=technology.id,
-                        parameter_id=key,
-                        value=ParamsManager.clean_str_val(value))
+                    if type(value) == list:
+                        cls.objects.create(
+                            model_id=technology.model_id,
+                            technology_id=technology.id,
+                            parameter_id=key,
+                            value=json.dumps(value))
+                    else:
+                        cls.objects.create(
+                            model_id=technology.model_id,
+                            technology_id=technology.id,
+                            parameter_id=key,
+                            value=ParamsManager.clean_str_val(value))
             technology.save()
         technology.update_calliope_pretty_name()
 
@@ -1007,31 +1014,76 @@ class Tech_Param(models.Model):
                     value=ParamsManager.clean_str_val(vals[0]),
                     raw_value=vals[1] if len(vals) > 1 else vals[0])
         if 'timeseries' in data:
-            for key, value in data['timeseries'].items():
-                cls.objects.filter(
-                    model_id=technology.model_id,
-                    technology_id=technology.id,
-                    parameter_id=key).hard_delete()
-                cls.objects.create(
-                    model_id=technology.model_id,
-                    technology_id=technology.id,
-                    parameter_id=key,
-                    value=ParamsManager.clean_str_val(value),
-                    timeseries_meta_id=value,
-                    timeseries=True)
+            for value_dict in data['timeseries']:
+                if 'id' in value_dict:
+                    parameter_instance = cls.objects.filter(
+                        model_id=technology.model_id,
+                        id=value_dict['id'])
+                    if 'value' in value_dict:
+                        parameter_instance.update(
+                            value=ParamsManager.clean_str_val(value_dict['value']),
+                            timeseries_meta_id=value_dict['value'],
+                            timeseries=True)
+                    if 'year' in value_dict:
+                        parameter_instance.update(year=value_dict['year'])
+                else:
+                    if 'index' in value_dict:
+                        cls.objects.create(
+                            model_id=technology.model_id,
+                            technology_id=technology.id,
+                            parameter_id=key,
+                            value=ParamsManager.clean_str_val(value),
+                            timeseries_meta_id=value,
+                            timeseries=True,
+                            index=value_dict['index'],
+                            dim=value_dict['dim'])
+                    else:
+                        cls.objects.create(
+                            model_id=technology.model_id,
+                            technology_id=technology.id,
+                            parameter_id=key,
+                            value=ParamsManager.clean_str_val(value),
+                            timeseries_meta_id=value,
+                            timeseries=True)
         if 'parameter_instance' in data:
-            instance_items = data['parameter_instance'].items()
-            for key, value_dict in instance_items:
-                parameter_instance = cls.objects.filter(
-                    model_id=technology.model_id,
-                    id=key)
-                if 'value' in value_dict:
-                    vals = str(value_dict['value']).split('||')
-                    parameter_instance.update(
-                        value=ParamsManager.clean_str_val(vals[0]),
-                        raw_value=vals[1] if len(vals) > 1 else vals[0])
-                if 'year' in value_dict:
-                    parameter_instance.update(year=value_dict['year'])
+            for value_dict in data['parameter_instance']:
+                if 'id' in value_dict:
+                    parameter_instance = cls.objects.filter(
+                        model_id=technology.model_id,
+                        id=value_dict['id'])
+                    if 'value' in value_dict:
+                        if type(value_dict['value']) == list:
+                            vals = [json.dumps(value_dict['value'])]
+                        else:
+                            vals = str(value_dict['value']).split('||')
+                        parameter_instance.update(
+                            value=ParamsManager.clean_str_val(vals[0]),
+                            raw_value=vals[1] if len(vals) > 1 else vals[0])
+                    if 'year' in value_dict:
+                        parameter_instance.update(year=value_dict['year'])
+                elif 'value' in value_dict:
+                    if type(value_dict['value']) == list:
+                        vals = [json.dumps(value_dict['value'])]
+                    else:
+                        vals = str(value_dict['value']).split('||')
+                    if 'index' in value_dict:
+                        cls.objects.create(
+                            model_id=technology.model_id,
+                            technology_id=technology.id,
+                            parameter_id=value_dict['parameter_id'],
+                            value=ParamsManager.clean_str_val(vals[0]),
+                            raw_value=vals[1] if len(vals) > 1 else vals[0],
+                            year=value_dict['year'] if 'year' in value_dict else 0,
+                            index=[value_dict['index']],
+                            dim=[value_dict['dim']])
+                    else:
+                        cls.objects.create(
+                            model_id=technology.model_id,
+                            technology_id=technology.id,
+                            parameter_id=value_dict['parameter_id'],
+                            value=ParamsManager.clean_str_val(vals[0]),
+                            raw_value=vals[1] if len(vals) > 1 else vals[0],
+                            year=value_dict['year'] if 'year' in value_dict else 0)
 
     @classmethod
     def _delete(cls, technology, data):
@@ -1043,11 +1095,11 @@ class Tech_Param(models.Model):
                     technology_id=technology.id,
                     parameter_id=key).hard_delete()
         elif 'parameter_instance' in data:
-            instance_items = data['parameter_instance'].items()
-            for key, value in instance_items:
-                cls.objects.filter(
-                    model_id=technology.model_id,
-                    id=key).hard_delete()
+            for value_dict in data['parameter_instance']:
+                if 'id' in value_dict:
+                    cls.objects.filter(
+                        model_id=technology.model_id,
+                        id=value_dict['id']).hard_delete()
 
 
 class Location(models.Model):
@@ -1184,31 +1236,71 @@ class Loc_Tech_Param(models.Model):
                     value=ParamsManager.clean_str_val(vals[0]),
                     raw_value=vals[1] if len(vals) > 1 else vals[0])
         if 'timeseries' in data:
-            for key, value in data['timeseries'].items():
-                cls.objects.filter(
-                    model_id=loc_tech.model_id,
-                    loc_tech_id=loc_tech.id,
-                    parameter_id=key).hard_delete()
-                cls.objects.create(
-                    model_id=loc_tech.model_id,
-                    loc_tech_id=loc_tech.id,
-                    parameter_id=key,
-                    value=ParamsManager.clean_str_val(value),
-                    timeseries_meta_id=value,
-                    timeseries=True)
+            for value_dict in data['timeseries']:
+                if 'id' in value_dict:
+                    parameter_instance = cls.objects.filter(
+                        model_id=loc_tech.model_id,
+                        id=value_dict['id'])
+                    if 'value' in value_dict:
+                        parameter_instance.update(
+                            value=ParamsManager.clean_str_val(value_dict['value']),
+                            timeseries_meta_id=value_dict['value'],
+                            timeseries=True)
+                    if 'year' in value_dict:
+                        parameter_instance.update(year=value_dict['year'])
+                else:
+                    if 'index' in value_dict:
+                        cls.objects.create(
+                            model_id=loc_tech.model_id,
+                            loc_tech_id=loc_tech.id,
+                            parameter_id=key,
+                            value=ParamsManager.clean_str_val(value),
+                            timeseries_meta_id=value,
+                            timeseries=True,
+                            index=value_dict['index'],
+                            dim=value_dict['dim'])
+                    else:
+                        cls.objects.create(
+                            model_id=loc_tech.model_id,
+                            loc_tech_id=loc_tech.id,
+                            parameter_id=key,
+                            value=ParamsManager.clean_str_val(value),
+                            timeseries_meta_id=value,
+                            timeseries=True)
+        
         if 'parameter_instance' in data:
-            instance_items = data['parameter_instance'].items()
-            for key, value_dict in instance_items:
-                parameter_instance = cls.objects.filter(
-                    model_id=loc_tech.model_id,
-                    id=key)
-                if 'value' in value_dict:
+            for value_dict in data['parameter_instance']:
+                if 'id' in value_dict:
+                    parameter_instance = cls.objects.filter(
+                        model_id=loc_tech.model_id,
+                        id=value_dict['id'])
+                    if 'value' in value_dict:
+                        vals = str(value_dict['value']).split('||')
+                        parameter_instance.update(
+                            value=ParamsManager.clean_str_val(vals[0]),
+                            raw_value=vals[1] if len(vals) > 1 else vals[0])
+                    if 'year' in value_dict:
+                        parameter_instance.update(year=value_dict['year'])
+                elif 'value' in value_dict:
                     vals = str(value_dict['value']).split('||')
-                    parameter_instance.update(
-                        value=ParamsManager.clean_str_val(vals[0]),
-                        raw_value=vals[1] if len(vals) > 1 else vals[0])
-                if 'year' in value_dict:
-                    parameter_instance.update(year=value_dict['year'])
+                    if 'index' in value_dict:
+                        cls.objects.create(
+                            model_id=loc_tech.model_id,
+                            loc_tech_id=loc_tech.id,
+                            parameter_id=value_dict['parameter_id'],
+                            value=ParamsManager.clean_str_val(vals[0]),
+                            raw_value=vals[1] if len(vals) > 1 else vals[0],
+                            year=value_dict['year'] if 'year' in value_dict else 0,
+                            index=[value_dict['index']],
+                            dim=[value_dict['dim']])
+                    else:
+                        cls.objects.create(
+                            model_id=loc_tech.model_id,
+                            loc_tech_id=loc_tech.id,
+                            parameter_id=value_dict['parameter_id'],
+                            value=ParamsManager.clean_str_val(vals[0]),
+                            raw_value=vals[1] if len(vals) > 1 else vals[0],
+                            year=value_dict['year'] if 'year' in value_dict else 0)
 
     @classmethod
     def _delete(cls, loc_tech, data):
@@ -1220,11 +1312,11 @@ class Loc_Tech_Param(models.Model):
                     loc_tech_id=loc_tech.id,
                     parameter_id=key).hard_delete()
         elif 'parameter_instance' in data:
-            instance_items = data['parameter_instance'].items()
-            for key, value in instance_items:
-                cls.objects.filter(
-                    model_id=loc_tech.model_id,
-                    id=key).hard_delete()
+            for value_dict in data['parameter_instance']:
+                if 'id' in value_dict:
+                    cls.objects.filter(
+                        model_id=loc_tech.model_id,
+                        id=value_dict['id']).hard_delete()
 
 
 class Scenario(models.Model):
@@ -1463,7 +1555,7 @@ class ParamsManager():
         if excl_ids is None:
             excl_ids = []
         new_excl_ids = excl_ids.copy()
-        values = ["id", "parameter__root",
+        values = ["parameter__root",
             parameter__category, "parameter_id",
             "parameter__name", parameter__pretty_name,
             parameter__description, "parameter__is_essential",
@@ -1482,17 +1574,17 @@ class ParamsManager():
             technology = Technology.objects.get(id=id)
             params = Tech_Param.objects.filter(
                 technology_id=id
-            ).order_by(parameter__category, parameter__pretty_name, 'year')
+            ).order_by(parameter__category, parameter__pretty_name, 'index','year')
 
         elif level == '2_loc_tech':
             loc_tech = Loc_Tech.objects.get(id=id)
             technology = loc_tech.technology
             params = Loc_Tech_Param.objects.filter(
                 loc_tech_id=id
-            ).order_by(parameter__category, parameter__pretty_name, 'year')
+            ).order_by(parameter__category, parameter__pretty_name, 'index','year')
 
         if level in ['1_tech', '2_loc_tech']:
-            values += ["year", "timeseries", "timeseries_meta_id",
+            values += ["id","year", "timeseries", "timeseries_meta_id",
                        "raw_value", "value","index","dim"]
 
         # System-Wide Handling
@@ -1502,9 +1594,9 @@ class ParamsManager():
         # Build Parameter Dictionary List
         params = params.values(*values)
         for param in params:
-            if (param["parameter_id"] in excl_ids):
+            if (str(param["parameter_id"])+str(param.get('index','None')) in excl_ids):
                 continue
-            new_excl_ids.append(param["parameter_id"])
+            new_excl_ids.append(str(param["parameter_id"])+str(param.get('index','None')))
             param_dict = {
                 'id': param["id"] if 'id' in param.keys() else 0,
                 'level': level,
@@ -1527,7 +1619,8 @@ class ParamsManager():
                 'value': param["value"] if "value" in param.keys() else param["default_value"],
                 'tags': param["parameter__tags"],
                 'index': param["index"] if 'index' in param.keys() else [],
-                'dim': param["dim"] if 'dim' in param.keys() else []
+                'dim': param["dim"] if 'dim' in param.keys() else [],
+                'dup_tag': [t for t in param['parameter__tags'] if 'multi_' in t][0] if (('duplicate' in param['parameter__tags']) or ('multiselect' in param['parameter__tags'])) else False
                 }
             data.append(param_dict)
 
@@ -1549,6 +1642,7 @@ class ParamsManager():
         essential_params = p_df.loc[essentials_ids]
         carrier_ratios = essential_params[essential_params.parameter_id == 7]
         for _, row in essential_params.iterrows():
+            #print(row)
             ratios_val = None
             val = row.value
             if row.parameter_is_carrier:
@@ -1566,8 +1660,10 @@ class ParamsManager():
                 'value': val,
                 'ratios': ratios_val,
                 'description': row.parameter_description,
+                'dup_tag': row.dup_tag
             }
 
+        print(essentials)
         return essentials, parameters
 
     @staticmethod

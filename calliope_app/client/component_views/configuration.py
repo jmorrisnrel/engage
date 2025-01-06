@@ -145,7 +145,7 @@ def all_tech_params(request):
 
     technology = model.technologies.get(id=technology_id)
     essentials, parameters = ParamsManager.all_tech_params(technology)
-
+    
     carriers = {}
     for carrier in model.carriers.all():
         carriers[carrier.name] = {'rate':carrier.rate_unit,'quantity':carrier.quantity_unit}
@@ -153,7 +153,19 @@ def all_tech_params(request):
     for carrier in model.carriers_old:
         if carrier not in carriers.keys():
             carriers[carrier] = {'rate':'kW','quantity':'kWh'}
+    
+    multiselect_params = Tech_Param.objects.filter(technology=technology,
+                                           parameter__tags__contains=['multiselect']).values('value','parameter__tags')
+    multiselect_values = []
+    for param in multiselect_params:
+        dup_tag = [t for t in param['parameter__tags'] if 'multi_' in t][0]
+        for val in json.loads(param['value'].replace("'",'"')):
+            if 'carrier' in param['parameter__tags']:
+                multiselect_values += [{'dup_tag':dup_tag,'index':val,'dim':'carrier','rate':carriers[val]['rate'],
+                                                 'quantity':carriers[val]['quantity']}]
+
     carriers = [{'name':c,'rate':v['rate'],'quantity':v['quantity']} for c,v in carriers.items()]
+        
     for param in parameters:
         param['raw_units'] = param['units']
 
@@ -187,7 +199,8 @@ def all_tech_params(request):
         "emissions": emissions,
         "carrier_multiselect": ParamsManager.get_tagged_params('carrier_multiselect'),
         "carrier_in_duplicate": ParamsManager.get_tagged_params('carrier_in_duplicate'),
-        "carrier_out_duplicate": ParamsManager.get_tagged_params('carrier_out_duplicate')
+        "carrier_out_duplicate": ParamsManager.get_tagged_params('carrier_out_duplicate'),
+        "multiselect_values": multiselect_values
     }
     html_parameters = list(render(request, 'technology_parameters.html', context))[0]
 
@@ -283,6 +296,16 @@ def all_loc_tech_params(request):
         if carrier not in carriers.keys():
             carriers[carrier] = {'rate':'kW','quantity':'kWh'}
 
+    multiselect_params = Tech_Param.objects.filter(technology=loc_tech.technology,
+                                           parameter__tags__contains=['multiselect']).values('value','parameter__tags')
+    multiselect_values = []
+    for param in multiselect_params:
+        dup_tag = [t for t in param['parameter__tags'] if 'multi_' in t][0]
+        for val in json.loads(param['value'].replace("'",'"')):
+            if 'carrier' in param['parameter__tags']:
+                multiselect_values += [{'dup_tag':dup_tag,'index':val,'dim':'carrier','rate':carriers[val]['rate'],
+                                                 'quantity':carriers[val]['quantity']}]
+
     units_in_ids= ParamsManager.get_tagged_params('units_in')
     units_out_ids= ParamsManager.get_tagged_params('units_out')
 
@@ -294,7 +317,7 @@ def all_loc_tech_params(request):
 
     carrier_out = Tech_Param.objects.filter(technology=loc_tech.technology, parameter__id__in=units_out_ids)
     if carrier_out:
-        carrier_out = carriers[carrier_out.first().value]
+        carrier_out = {'rate':'None','quantity':'None'}#carriers[carrier_out.first().value[0] if type(carrier_out.first().value)==list else carrier_out.first().value]
     else:
         carrier_out = {'rate':'None','quantity':'None'}
 
@@ -318,7 +341,8 @@ def all_loc_tech_params(request):
         "can_edit": can_edit,
         "carrier_multiselect": ParamsManager.get_tagged_params('carrier_multiselect'),
         "carrier_in_duplicate": ParamsManager.get_tagged_params('carrier_in_duplicate'),
-        "carrier_out_duplicate": ParamsManager.get_tagged_params('carrier_out_duplicate')}
+        "carrier_out_duplicate": ParamsManager.get_tagged_params('carrier_out_duplicate'),
+        "multiselect_values": multiselect_values}
     html_parameters = list(render(request, 'technology_parameters.html', context))[0]
 
     payload = {
@@ -499,7 +523,6 @@ def scenario(request):
         "unique_tags": sorted(filter(None, set(unique_tags))),
         "unique_locations": sorted(filter(None, set(unique_locations))),
         "can_edit": can_edit}
-    print(f"Context: in: {context["carrier_ins"]}, out: {context["carrier_outs"]}")
     scenario_configuration = list(render(request,
                                          'scenario_configuration.html',
                                          context))[0]
