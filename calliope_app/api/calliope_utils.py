@@ -499,7 +499,7 @@ def apply_gradient(old_inputs,old_results,new_inputs,old_year,new_year,logger):
     new_loctechs = yaml.safe_load(open(new_inputs+'/locations.yaml','r'))
     new_model = yaml.safe_load(open(new_inputs+'/model.yaml','r'))
 
-    built_tech_names = []
+    built_tech_names = {}
     built_techs = {}
     built_loc_techs = {}
 
