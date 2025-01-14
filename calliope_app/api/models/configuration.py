@@ -269,7 +269,6 @@ class Model(models.Model):
         self.carrier_map(carrier_in, carrier_ins, carrier_outs, carrier_type="carrier_in")
         self.carrier_map(carrier_out, carrier_ins, carrier_outs, carrier_type="carrier_out")
 
-        print(carrier_ins, carrier_outs)
         return carrier_ins, carrier_outs
 
     def carrier_map(self, carrier_params, carrier_ins, carrier_outs, carrier_type):
@@ -1711,8 +1710,7 @@ class ParamsManager():
     @classmethod
     def get_tagged_params(cls,tag):
         queryset = Parameter.objects.filter(tags__contains=[tag])
-        categories = [param.id for param in queryset]
-        print(categories)
+        categories = sorted([param.id for param in queryset])
         return categories
     
 

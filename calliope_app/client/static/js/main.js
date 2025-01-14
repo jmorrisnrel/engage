@@ -285,10 +285,7 @@ function get_tech_parameters() {
 					dup_tag = $(this).val();
 					index = $(this).attr('index');
 					dim = $(this).attr('dim');
-					existing_dup_rows = $('tr[data-index="'+$(this).attr('index')+'"][data-dup-tag="'+dup_tag+'"]');
-					if (!((existing_dup_rows.length > 0))){ 
-						dup_parameter_rows(dup_tag,index,dim);
-					}
+					dup_parameter_rows(dup_tag,index,dim);
 					if (dup_tag == 'multi_carrier_out'){
 						dup_row_units(dup_tag,index,$(this).attr('rate_unit'),$(this).attr('quantity_unit'),false);
 					} else if (dup_tag == 'multi_carrier_in'){
@@ -441,10 +438,8 @@ function get_loc_tech_parameters() {
 					dup_tag = $(this).val();
 					index = $(this).attr('index');
 					dim = $(this).attr('dim');
-					existing_dup_rows = $('tr[data-index="'+$(this).attr('index')+'"][data-dup-tag="'+dup_tag+'"]');
-					if (!((existing_dup_rows.length > 0))){ 
-						dup_parameter_rows(dup_tag,index,dim);
-					}
+
+					dup_parameter_rows(dup_tag,index,dim);
 					if ($(this).val() == 'multi_carrier_out'){
 						dup_row_units(dup_tag,index,$(this).attr('rate_unit'),$(this).attr('quantity_unit'),false);
 					} else if ($(this).val() == 'multi_carrier_in'){
@@ -1339,27 +1334,31 @@ function dup_parameter_rows(dup_tag,index,dim){
 	default_dup_rows = $('tr.dup_default[data-dup-tag="'+dup_tag+'"]');
 	first_default_row = default_dup_rows.first();
 	default_dup_rows.each(function(){
-		var add_row = $(this).clone();
-		var param_id = add_row.data('param_id');
-		add_row.removeClass('dup_default hide param_row_'+param_id).addClass('param_row_'+param_id+index);
-		if (add_row.hasClass('add_param_row_'+param_id)){
-		add_row.removeClass('add_param_row_'+param_id).addClass('add_param_row_'+param_id+index)
+		existing_dup_rows = $('tr[data-index="'+index+'"][data-dup-tag="'+dup_tag+'"][data-param_id="'+$(this).data('param_id')+index+'"]'); 
+		if (!((existing_dup_rows.length > 0))){
+			var add_row = $(this).clone();
+			var param_id = add_row.data('param_id');
+			add_row.removeClass('dup_default hide param_row_'+param_id).addClass('param_row_'+param_id+index);
+			if (add_row.hasClass('add_param_row_'+param_id)){
+			add_row.removeClass('add_param_row_'+param_id).addClass('add_param_row_'+param_id+index)
+			}
+			add_row.find($('[data-param_id='+param_id+']')).each(function(){
+				$(this).attr('data-param_id') = param_id+index
+			});
+			add_row.attr('data-index', index);
+			add_row.attr('data-param_id', add_row.attr('data-param_id')+index);
+			add_row.insertBefore(first_default_row);
+			add_row.find('.parameter-target-value').html('');
+			add_row.find('.parameter-index').attr('data-value', index);
+			add_row.find('.parameter-index').val(index);
+			add_row.find('.parameter-dim').attr('data-value', dim);
+			add_row.find('.parameter-dim').val(dim);
+			add_row.find('.parameter-label').html(add_row.find('.parameter-label').first().html()+' '+dim+': '+index);
+			
 		}
-		add_row.find($('[data-param_id='+param_id+']')).each(function(){
-			$(this).attr('data-param_id') = param_id+index
-		});
-		add_row.attr('data-index', index);
-		add_row.attr('data-param_id', add_row.attr('data-param_id')+index);
-		add_row.insertBefore(first_default_row);
-		add_row.find('.parameter-target-value').html('');
-		add_row.find('.parameter-index').attr('data-value', index);
-		add_row.find('.parameter-index').val(index);
-		add_row.find('.parameter-dim').attr('data-value', dim);
-		add_row.find('.parameter-dim').val(dim);
-		add_row.find('.parameter-label').html(add_row.find('.parameter-label').first().html()+' '+dim+': '+index);
-		activate_table();
-		check_unsaved();
 	});
+	activate_table();
+	check_unsaved();
 }
 function dup_row_units(dup_tag, index, rate_unit, quantity_unit, carrier_in_f) {
 	existing_dup_rows = $('tr[data-index="'+index+'"][data-dup-tag="'+dup_tag+'"]');

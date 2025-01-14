@@ -311,15 +311,15 @@ def all_loc_tech_params(request):
     units_in_ids= ParamsManager.get_tagged_params('units_in')
     units_out_ids= ParamsManager.get_tagged_params('units_out')
 
-    carrier_in = Tech_Param.objects.filter(technology=loc_tech.technology, parameter__id__in=units_in_ids)
+    carrier_in = Tech_Param.objects.filter(technology=loc_tech.technology, parameter__tags__contains=['units_in'])
     if carrier_in:
         carrier_in = carriers[carrier_in.first().value]
     else:
         carrier_in = {'rate':'None','quantity':'None'}
 
-    carrier_out = Tech_Param.objects.filter(technology=loc_tech.technology, parameter__id__in=units_out_ids)
+    carrier_out = Tech_Param.objects.filter(technology=loc_tech.technology, parameter__tags__contains=['units_out'])
     if carrier_out:
-        carrier_out = {'rate':'None','quantity':'None'}#carriers[carrier_out.first().value[0] if type(carrier_out.first().value)==list else carrier_out.first().value]
+        carrier_out = carriers[carrier_out.first().value]#carriers[carrier_out.first().value[0] if type(carrier_out.first().value)==list else carrier_out.first().value]
     else:
         carrier_out = {'rate':'None','quantity':'None'}
 

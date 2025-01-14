@@ -69,19 +69,23 @@
 		{% endfor %}
 		</div>
 		<!-- Optional Carriers (Conversion Plus) -->
-		<div class="col-12">
 		{% for carrier_id in cplus_carrier_ids %}
 			{% if carrier_id not in required_carrier_ids %}
 				{% with essentials|return_item:carrier_id as carrier %}
 				{% with False as required %}
-				{% if carrier %}
-					{% include 'carrier_form_complex.html' %}
+				{% if carrier_id in carrier_multiselect %}
+					{% if carrier %}
+						{% include 'carrier_form_multiselect.html' %}
+					{% endif %}
+				{% else %}
+					{% if carrier %}
+						{% include 'carrier_form_complex.html' %}
+					{% endif %}
 				{% endif %}
 				{% endwith %}
 				{% endwith %}	
 			{% endif %}
 		{% endfor %}
-		</div>
 
 	</div>
 	<div class="row">

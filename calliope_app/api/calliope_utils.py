@@ -46,11 +46,10 @@ def get_model_yaml_set(run, scenario_id, year, tech_params_source, node_params_s
             dictify(model_yaml_set,key_list,param.value)
     dictify(model_yaml_set,['import'],'["techs.yaml","locations.yaml"]')
     dictify(model_yaml_set,['config','init','add_math'],'["custom_math.yaml"]')
-    for id in run.run_options.keys():
-        run_parameter = Run_Parameter.objects.get(pk=int(id))
-        unique_param = run_parameter.root + '.' + run_parameter.name
+    for run_param in run.run_options:
+        unique_param = run_param['root'] + '.' + run_param['name']
         key_list = unique_param.split('.')
-        dictify(model_yaml_set,key_list,run.run_options[id])
+        dictify(model_yaml_set,key_list,run_param['value'])
 
     if node_params_source or tech_params_source:
         model_yaml_set["data_sources"] = {}
@@ -144,9 +143,20 @@ def get_techs_yaml_set(scenario_id, year):
                 parent_type = 'templates'
             else:
                 parent_type = 'techs'
-            if param.parameter.index and param.parameter.dim:
-                unique_param = param.parameter.root+'.'+param.parameter.name+str(param.parameter.index)+str(param.parameter.dim)
+            if (param.parameter.index and param.parameter.dim) or (param.index and param.dim):
+                if not(param.parameter.index and param.parameter.dim):
+                    index = param.index
+                    dim = param.dim
+                elif not(param.index and param.dim):
+                    index = param.parameter.index
+                    dim = param.parameter.dim
+                else:
+                    index = param.parameter.index+param.index
+                    dim = param.parameter.dim+param.dim
+                unique_param = param.parameter.root+'.'+param.parameter.name+str(index)+str(dim)
             else:
+                index = None
+                dim = None
                 unique_param = param.parameter.root+'.'+param.parameter.name
                 
             if unique_param not in unique_params:
@@ -158,7 +168,18 @@ def get_techs_yaml_set(scenario_id, year):
                     value = param.value
                 param_list = [parent_type, param.technology.calliope_name]+param_keys
                 
-                dictify(techs_yaml_set,param_list,value,param.parameter.index,param.parameter.dim)
+                if 'multi_index' in param.parameter.tags:
+                    try:
+                        value_l = json.loads(value)
+                    except:
+                        dictify(techs_yaml_set,param_list,value,index,dim)
+                        value_l = []
+                    if 'carrier_multiselect' in param.parameter.tags:
+                        dim = 'carriers'
+                    for v in value_l:
+                        dictify(techs_yaml_set,param_list,'True',v,dim)
+                else:
+                    dictify(techs_yaml_set,param_list,value,index,dim)
     return techs_yaml_set
 
 
@@ -204,8 +225,10 @@ def get_loc_techs_yaml_set(scenario_id, year):
         # Loop over Parameters
         for param in params:
             param_keys = param.parameter.root.split('.')+[param.parameter.name]
-            if param.parameter.index and param.parameter.dim:
-                unique_param = param.parameter.root+'.'+param.parameter.name+str(param.parameter.index)+str(param.parameter.dim)
+            index = param.parameter.index+param.index
+            dim = param.parameter.dim+param.dim
+            if (param.parameter.index and param.parameter.dim) or (param.index and param.dim):
+                unique_param = param.parameter.root+'.'+param.parameter.name+str(index)+str(dim)
             else:
                 unique_param = param.parameter.root+'.'+param.parameter.name
             unique_param = param.parameter.root+'.'+param.parameter.name
@@ -220,7 +243,18 @@ def get_loc_techs_yaml_set(scenario_id, year):
                 else:
                     param_list = [parent_type, location, 'techs',
                                 param.loc_tech.technology.calliope_name]+param_keys
-                dictify(loc_techs_yaml_set,param_list,value,param.parameter.index,param.parameter.dim)
+                if 'multi_index' in param.parameter.tags:                  
+                    try:
+                        value_l = json.loads(value)
+                    except:
+                        dictify(loc_techs_yaml_set,param_list,value,index,dim)
+                        value_l = []
+                    if 'carrier_multiselect' in param.parameter.tags:
+                        dim = 'carriers'
+                    for v in value_l:
+                        dictify(loc_techs_yaml_set,param_list,'True',v,dim)
+                else:
+                    dictify(loc_techs_yaml_set,param_list,value,index,dim)
     return loc_techs_yaml_set
 
 def get_carriers_yaml_set(scenario_id):
@@ -319,10 +353,10 @@ def dictify(target, keys, value, index=None, dim=None):
         if 'data' not in target[keys[-1]]:
             target[keys[-1]]['data'] = []
             target[keys[-1]]['index'] = []
-            target[keys[-1]]['dims'] = [dim]
+            target[keys[-1]]['dims'] = dim
 
-        if [dim] != target[keys[-1]]['dims']:
-            raise ValueError('Error with indexed parameter: {}. Dimensions do not match. {} vs {}'.format(keys[-1],[dim],target[keys[-1]]['dims']))
+        if dim != target[keys[-1]]['dims']:
+            raise ValueError('Error with indexed parameter: {}. Dimensions do not match. {} vs {}'.format(keys[-1],dim,target[keys[-1]]['dims']))
         
         target[keys[-1]]['data'] += [value]
         target[keys[-1]]['index'] += [index]
@@ -398,7 +432,7 @@ def _set_clustering(model_path, on=False, k=14):
     model_yaml['model']['time'] = time
     # Write
     with open(model_path, 'w') as file:
-        yaml.dump(model_yaml, file)
+        yaml.dump(model_yaml, file, default_flow_style=None)
 
 
 def _set_subset_time(model_path, start_time=None, end_time=None):
@@ -413,7 +447,7 @@ def _set_subset_time(model_path, start_time=None, end_time=None):
     model_yaml['model']['subset_time'] = subset_time
     # Write
     with open(model_path, 'w') as file:
-        yaml.dump(model_yaml, file)
+        yaml.dump(model_yaml, file, default_flow_style=None)
 
 
 def _set_capacities(model_path, ignore_techs=[],
@@ -429,7 +463,7 @@ def _set_capacities(model_path, ignore_techs=[],
         model_yaml['import'] = ['techs.yaml', 'locations_fixed.yaml']
     # Write
     with open(model_path, 'w') as file:
-        yaml.dump(model_yaml, file)
+        yaml.dump(model_yaml, file, default_flow_style=None)
     if capacity is None:
         return
     # ---- UPDATE CAPACITIES
@@ -475,7 +509,7 @@ def _set_capacities(model_path, ignore_techs=[],
     locations_path = locations_path.replace('locations.yaml',
                                             'locations_fixed.yaml')
     with open(locations_path, 'w') as file:
-        yaml.dump(locations_yaml, file)
+        yaml.dump(locations_yaml, file, default_flow_style=None)
 
 
 def _get_cap_results(model):
@@ -584,7 +618,7 @@ def _yaml_outputs(inputs_dir, outputs_dir):
                 model['links'][l]['results'][v+'_equals'] = float(r_df.loc[(r_df['nodes'] == l1) &
                                                                 (r_df['techs'] == l)][v].values[0])
     if has_outputs:
-        yaml.dump(model, open(os.path.join(outputs_dir,'model_results.yaml'),'w+'), default_flow_style=False)
+        yaml.dump(model, open(os.path.join(outputs_dir,'model_results.yaml'),'w+'), default_flow_style=None)
 
 def apply_gradient(old_inputs,old_results,new_inputs,old_year,new_year,logger):
     old_model = yaml.safe_load(open(old_results+'/model_results.yaml'))
@@ -828,13 +862,13 @@ def apply_gradient(old_inputs,old_results,new_inputs,old_year,new_year,logger):
         tech_ts_df_new.to_csv(os.path.join(new_inputs,'tech_timeseries.csv'))
 
     with open(new_inputs+'/techs.yaml','w') as outfile:
-        yaml.dump(new_techs,outfile,default_flow_style=False)
+        yaml.dump(new_techs,outfile, default_flow_style=None)
 
     with open(new_inputs+'/locations.yaml','w') as outfile:
-        yaml.dump(new_loctechs,outfile,default_flow_style=False)
+        yaml.dump(new_loctechs,outfile,default_flow_style=None)
 
     with open(new_inputs+'/model.yaml', 'w') as outfile:
-        yaml.dump(new_model,outfile,default_flow_style=False)
+        yaml.dump(new_model,outfile,default_flow_style=None)
 
     with open(new_inputs+'/custom_math.yaml', 'w') as outfile:
-        yaml.dump(new_constraints,outfile,default_flow_style=False)
+        yaml.dump(new_constraints,outfile,default_flow_style=None)

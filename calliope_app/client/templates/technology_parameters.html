@@ -185,7 +185,7 @@
 				<!-- Timeseries Visualization Row -->
 				<tr class="param_row param_row_min param_row_{{ param.parameter_id }}{% if param.index %}{{param.index.0}}{% endif %} table-default{% if param.dup_tag %} {% if not param.index %}dup_default hide {% endif %} {{param.dup_tag}}" data-dup-tag={{param.dup_tag}}{% else %} "{% endif %} data-param_id={{ param.parameter_id }}{% if param.index %}{{param.index.0}} data-index={{param.index.0}}{% endif %}>
 					<td colspan=8 style="background-color: white;">
-						<div id="chart-{{ param.parameter_id }}" class="row centered timeseries_viz"></div>
+						<div id="chart-{{ param.parameter_id }}{% if param.index %}{{param.index.0}}{% endif %}" class="row centered timeseries_viz"></div>
 					</td>
 				</tr>
 			{% else %}
