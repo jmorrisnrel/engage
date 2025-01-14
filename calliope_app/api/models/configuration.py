@@ -1620,7 +1620,7 @@ class ParamsManager():
                 'tags': param["parameter__tags"],
                 'index': param["index"] if 'index' in param.keys() else [],
                 'dim': param["dim"] if 'dim' in param.keys() else [],
-                'dup_tag': [t for t in param['parameter__tags'] if 'multi_' in t][0] if (('duplicate' in param['parameter__tags']) or ('multiselect' in param['parameter__tags'])) else False
+                'dup_tag': ([t for t in param['parameter__tags'] if 'multi_' in t]+[False])[0] if (('duplicate' in param['parameter__tags']) or ('multiselect' in param['parameter__tags'])) else False
                 }
             data.append(param_dict)
 
@@ -1712,6 +1712,7 @@ class ParamsManager():
     def get_tagged_params(cls,tag):
         queryset = Parameter.objects.filter(tags__contains=[tag])
         categories = [param.id for param in queryset]
+        print(categories)
         return categories
     
 

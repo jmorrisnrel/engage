@@ -158,10 +158,11 @@ def all_tech_params(request):
                                            parameter__tags__contains=['multiselect']).values('value','parameter__tags')
     multiselect_values = []
     for param in multiselect_params:
-        dup_tag = [t for t in param['parameter__tags'] if 'multi_' in t][0]
-        for val in json.loads(param['value'].replace("'",'"')):
-            if 'carrier' in param['parameter__tags']:
-                multiselect_values += [{'dup_tag':dup_tag,'index':val,'dim':'carrier','rate':carriers[val]['rate'],
+        dup_tag = ([t for t in param['parameter__tags'] if 'multi_' in t]+[False])[0]
+        if dup_tag:
+            for val in json.loads(param['value'].replace("'",'"')):
+                if 'carrier' in param['parameter__tags']:
+                    multiselect_values += [{'dup_tag':dup_tag,'index':val,'dim':'carrier','rate':carriers[val]['rate'],
                                                  'quantity':carriers[val]['quantity']}]
 
     carriers = [{'name':c,'rate':v['rate'],'quantity':v['quantity']} for c,v in carriers.items()]
@@ -300,10 +301,11 @@ def all_loc_tech_params(request):
                                            parameter__tags__contains=['multiselect']).values('value','parameter__tags')
     multiselect_values = []
     for param in multiselect_params:
-        dup_tag = [t for t in param['parameter__tags'] if 'multi_' in t][0]
-        for val in json.loads(param['value'].replace("'",'"')):
-            if 'carrier' in param['parameter__tags']:
-                multiselect_values += [{'dup_tag':dup_tag,'index':val,'dim':'carrier','rate':carriers[val]['rate'],
+        dup_tag = ([t for t in param['parameter__tags'] if 'multi_' in t]+[False])[0]
+        if dup_tag:
+            for val in json.loads(param['value'].replace("'",'"')):
+                if 'carrier' in param['parameter__tags']:
+                    multiselect_values += [{'dup_tag':dup_tag,'index':val,'dim':'carrier','rate':carriers[val]['rate'],
                                                  'quantity':carriers[val]['quantity']}]
 
     units_in_ids= ParamsManager.get_tagged_params('units_in')
