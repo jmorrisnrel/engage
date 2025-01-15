@@ -77,7 +77,7 @@ $(document).ready(function () {
               $(this).find(".parameter-delete").click();
             });
           } else if ($(this).is(':checked')) {
-            dup_parameter_rows(button.attr('data-dup-tag'),carrier,'carrier');
+            dup_parameter_rows(button.attr('data-dup-tag'),carrier,'carriers');
           }
           if (button.data('dup-tag') == 'multi_carrier_out'){
 						dup_row_units(button.data('dup-tag'),carrier,$(this).attr('rate_unit'),$(this).attr('quantity_unit'),false);

@@ -156,8 +156,13 @@
 					<td style="width:100px;" class="centered">
 						<button {% if not can_edit %}disabled{% endif %} tabindex="-1" type="button" class="btn btn-default btn-sm transparent parameter-reset hide"><i class="fas fa-undo"></i></button>
 						{% if param.level == level %}
-						<button {% if not can_edit %}disabled{% endif %} tabindex="-1" type="button" class="btn btn-default transparent parameter-delete"><i class="fas fa-times"></i></button>
-						
+							<button {% if not can_edit %}disabled{% endif %} tabindex="-1" type="button" class="btn btn-default transparent parameter-delete"><i class="fas fa-times"></i></button>
+							{% if param.id %}
+							<input type="hidden" class="parameter-delete-extra" name="delete[parameter_instance][][id]" data-value="{{param.id}}" value="{{param.id}}">
+							{% else %}
+							<input type="hidden" class="parameter-delete-extra" name="delete[parameter_instance][][id]">
+							{% endif %}
+							<input {% if not can_edit %}disabled{% endif %} style="display: none" class="check_delete" type="checkbox" name="delete[parameter_instance][][delete]">
 						{% else %}
 						<span class="text-sm">{% trans "Default" %}</span>
 						{% endif %}
@@ -243,20 +248,20 @@
 					<td class="centered">
 						<button {% if not can_edit %}disabled{% endif %} tabindex="-1" type="button" class="btn btn-default btn-sm transparent parameter-reset hide"><i class="fas fa-undo"></i></button>
 						{% if param.level == level %}
-						<button {% if not can_edit %}disabled{% endif %} tabindex="-1" type="button" class="btn btn-default transparent parameter-value-delete"><i class="fas fa-times"></i></button>
-						{% if param.index %}
-						<input type="hidden" class="parameter-delete-extra" name="delete[parameter_instance][][index]" data-value="{{param.index.0}}" value="{{param.index.0}}">
-						<input type="hidden" class="parameter-delete-extra" name="delete[parameter_instance][][dim]" data-value="{{param.dim.0}}" value="{{param.dim.0}}">
-						{% else %}
-						<input type="hidden" class="parameter-delete-extra parameter-index" name="delete[parameter_instance][][index]">
-						<input type="hidden" class="parameter-delete-extra parameter-dim" name="delete[parameter_instance][][dim]">
-						{% endif %}
-						{% if param.id and param.level == level %}
-						<input type="hidden" class="parameter-delete-extra" name="delete[parameter_instance][][id]" data-value="{{param.id}}" value="{{param.id}}">
-						{% else %}
-						<input type="hidden" class="parameter-delete-extra" name="delete[parameter_instance][][id]">
-						{% endif %}
-						<input {% if not can_edit %}disabled{% endif %} style="display: none" class="check_delete" type="checkbox" name="delete[parameter_instance][][delete]">
+							<button {% if not can_edit %}disabled{% endif %} tabindex="-1" type="button" class="btn btn-default transparent parameter-value-delete"><i class="fas fa-times"></i></button>
+							{% if param.index %}
+							<input type="hidden" class="parameter-delete-extra" name="delete[parameter_instance][][index]" data-value="{{param.index.0}}" value="{{param.index.0}}">
+							<input type="hidden" class="parameter-delete-extra" name="delete[parameter_instance][][dim]" data-value="{{param.dim.0}}" value="{{param.dim.0}}">
+							{% else %}
+							<input type="hidden" class="parameter-delete-extra parameter-index" name="delete[parameter_instance][][index]">
+							<input type="hidden" class="parameter-delete-extra parameter-dim" name="delete[parameter_instance][][dim]">
+							{% endif %}
+							{% if param.id %}
+							<input type="hidden" class="parameter-delete-extra" name="delete[parameter_instance][][id]" data-value="{{param.id}}" value="{{param.id}}">
+							{% else %}
+							<input type="hidden" class="parameter-delete-extra" name="delete[parameter_instance][][id]">
+							{% endif %}
+							<input {% if not can_edit %}disabled{% endif %} style="display: none" class="check_delete" type="checkbox" name="delete[parameter_instance][][delete]">
 						{% endif %}
 					</td>
 					<td style="background-color: white"></td>

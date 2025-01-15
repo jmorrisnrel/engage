@@ -162,7 +162,7 @@ def all_tech_params(request):
         if dup_tag:
             for val in json.loads(param['value'].replace("'",'"')):
                 if 'carrier' in param['parameter__tags']:
-                    multiselect_values += [{'dup_tag':dup_tag,'index':val,'dim':'carrier','rate':carriers[val]['rate'],
+                    multiselect_values += [{'dup_tag':dup_tag,'index':val,'dim':'carriers','rate':carriers[val]['rate'],
                                                  'quantity':carriers[val]['quantity']}]
 
     carriers = [{'name':c,'rate':v['rate'],'quantity':v['quantity']} for c,v in carriers.items()]
@@ -305,7 +305,7 @@ def all_loc_tech_params(request):
         if dup_tag:
             for val in json.loads(param['value'].replace("'",'"')):
                 if 'carrier' in param['parameter__tags']:
-                    multiselect_values += [{'dup_tag':dup_tag,'index':val,'dim':'carrier','rate':carriers[val]['rate'],
+                    multiselect_values += [{'dup_tag':dup_tag,'index':val,'dim':'carriers','rate':carriers[val]['rate'],
                                                  'quantity':carriers[val]['quantity']}]
 
     units_in_ids= ParamsManager.get_tagged_params('units_in')

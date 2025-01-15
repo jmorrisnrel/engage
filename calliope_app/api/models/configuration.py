@@ -1662,7 +1662,6 @@ class ParamsManager():
                 'dup_tag': row.dup_tag
             }
 
-        print(essentials)
         return essentials, parameters
 
     @staticmethod

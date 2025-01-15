@@ -44,8 +44,8 @@ def get_model_yaml_set(run, scenario_id, year, tech_params_source, node_params_s
             unique_params.append(unique_param)
             key_list = unique_param.split('.')
             dictify(model_yaml_set,key_list,param.value)
-    dictify(model_yaml_set,['import'],'["techs.yaml","locations.yaml"]')
-    dictify(model_yaml_set,['config','init','add_math'],'["custom_math.yaml"]')
+    dictify(model_yaml_set,['import'],'["techs.yaml","locations.yaml"]',simplify=False)
+    dictify(model_yaml_set,['config','init','add_math'],'["custom_math.yaml"]',simplify=False)
     for run_param in run.run_options:
         unique_param = run_param['root'] + '.' + run_param['name']
         key_list = unique_param.split('.')
@@ -79,13 +79,13 @@ def get_custom_math_yaml_set(run, scenario_id, year):
     unique_params = []
     # Loop over Parameters
     for param in params:
-        unique_param = param.run_parameter.root
+        unique_param = param.run_parameter.id
 
         if unique_param not in unique_params:
             # If parameter hasn't been set, add to Return List
             unique_params.append(unique_param)
-            key_list = unique_param.split('.')
-            dictify(custom_math_yaml_set,key_list,param.value)
+            key_list = param.run_parameter.root.split('.')
+            dictify(custom_math_yaml_set,key_list,param.value,True)
 
     return custom_math_yaml_set
 
@@ -310,7 +310,7 @@ def dictify(target, keys, value):
 # Creates any missing keys in the nested list
 # This version of the function uses index and dimension values to create/add to a Calliope indexed parameter (introduced in v0.7)
 # Multiple Engage parameter records can be added to the same indexed parameter in the YAML
-def dictify(target, keys, value, index=None, dim=None):
+def dictify(target, keys, value, index=None, dim=None, update=False, simplify=True):
     # Build the nested dict structure (if neccessary) by adding any
     # nested keys in the list before the final key/value pair
     # Strip out/skip any entries with an empty key
@@ -342,6 +342,8 @@ def dictify(target, keys, value, index=None, dim=None):
             except ValueError:
                 value = value
 
+    if simplify and type(value) == list and len(value) == 1:
+        value = value[0]
     if index and dim:
         if len(index) == 1:
             index = index[0]
@@ -360,6 +362,8 @@ def dictify(target, keys, value, index=None, dim=None):
         
         target[keys[-1]]['data'] += [value]
         target[keys[-1]]['index'] += [index]
+    elif update and target[keys[-1]]:
+        target[keys[-1]] = {*target[keys[-1]], *value}
     else:
         target[keys[-1]] = value
     
